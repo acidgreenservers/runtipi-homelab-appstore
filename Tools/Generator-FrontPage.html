@@ -8,8 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load Inter font from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <!-- Load Font Awesome for GitHub icon (cat) and Star icon -->
+    <!-- Load Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <style>
         /* --- Base Theme (DARK) --- */
         :root {
@@ -17,39 +18,40 @@
             --bg-body: #131313;
             --bg-container: #181818;
             --bg-card: #1F1F1F;
-            --bg-gradient-start: #2D2D2D;
-            --bg-gradient-end: #121212;
+            --bg-input: #2D2D2D; /* New: for textareas/inputs */
             --color-text-primary: #E2E8F0;
             --color-text-secondary: #94A3B8;
             --color-border: #2D2D2D;
-            --color-black-fill: #94A3B8; /* Dark fill remains secondary text grey */
+            --color-black-fill: #94A3B8;
             /* Accents */
             --color-runtipi-red: #FF66A3;
             --color-runtipi-blue: #6495ED;
-            /* CTA - Made near-black for dark theme */
+            /* CTA */
             --color-cta: #131313;
             --color-cta-hover: #000000;
             --color-cta-border: #555555;
             --color-header-icon: #E2E8F0;
+            /* Alert/Status */
+            --color-error: #F87171;
+            --color-success: #34D399;
         }
 
         /* --- Light Theme Overrides --- */
         html[data-theme='light'] {
             /* General */
-            --bg-body: #F7F7F7; /* Light grey background */
-            --bg-container: #FFFFFF; /* White container for main content */
+            --bg-body: #F7F7F7;
+            --bg-container: #FFFFFF;
             --bg-card: #FFFFFF;
-            --bg-gradient-start: #FFFFFF;
-            --bg-gradient-end: #F0F0F0;
-            --color-text-primary: #1F2937; /* Dark text */
-            --color-text-secondary: #6B7280; /* Medium grey text */
-            --color-border: #E5E7EB; /* Light grey border */
-            --color-black-fill: #000000; /* Light fill for gap is now black */
-            /* CTA - Made black for light theme, as requested */
+            --bg-input: #E5E7EB; /* New: light grey input background */
+            --color-text-primary: #1F2937;
+            --color-text-secondary: #6B7280;
+            --color-border: #E5E7EB;
+            --color-black-fill: #000000;
+            /* CTA */
             --color-cta: #1F1F1F; 
             --color-cta-hover: #000000;
             --color-cta-border: #131313;
-            --color-header-icon: #1F2937; /* Dark icon in header */
+            --color-header-icon: #1F2937;
         }
 
         /* Apply variables */
@@ -60,7 +62,6 @@
             transition: background-color 0.3s, color 0.3s;
         }
         
-        /* NEW: Subtle text shadow applied ONLY to H1 and H2 in Light Mode */
         html[data-theme='light'] h1, 
         html[data-theme='light'] h2 {
             text-shadow: 1px 1px 2px rgba(31, 41, 55, 0.2);
@@ -68,20 +69,14 @@
 
         .header-border { border-color: var(--color-border); }
         .hero-title-shadow {
-            /* This strong shadow remains for dark mode only */
             text-shadow: 0 0 10px rgba(255, 102, 163, 0.1), 0 0 10px rgba(100, 149, 237, 0.1);
         }
         
-        /* Apply gradient to text color */
         .text-gradient {
-            /* Fallback color for browsers that don't support the clip property */
             color: var(--color-runtipi-red);
-            /* Set the background to the gradient */
             background-image: linear-gradient(to right, var(--color-runtipi-red), var(--color-runtipi-blue));
-            /* Clip the background to the text area */
             -webkit-background-clip: text;
             background-clip: text;
-            /* Make the text transparent so the background shows through */
             -webkit-text-fill-color: transparent;
             text-fill-color: transparent;
         }
@@ -94,8 +89,8 @@
         .text-runtipi-red { color: var(--color-runtipi-red); }
         .text-runtipi-blue { color: var(--color-runtipi-blue); }
         .icon-color { color: var(--color-header-icon); }
+        .bg-input-dark { background-color: var(--bg-input); }
 
-        /* Mock Dashboard Card (True dark style) */
         .mock-dashboard-bg {
             background-color: var(--color-black-fill);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -106,13 +101,12 @@
             border-color: var(--color-border);
         }
         
-        /* Feature Card Hover Effect */
         .feature-card:hover {
             border-color: var(--color-runtipi-red);
             transform: translateY(-2px);
         }
 
-        /* CTA Button (Generate App) */
+        /* CTA Button - Reusable Class */
         .btn-cta {
             background-color: var(--color-cta); 
             border: 1px solid var(--color-cta-border);
@@ -125,60 +119,63 @@
             border-color: var(--color-runtipi-red);
             transform: scale(1.02);
         }
+        .btn-cta:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            border-color: var(--color-cta-border);
+        }
 
-        /* --- NEW STYLES: Gradient Border Button with Tooltip --- */
-
+        /* --- Gradient Border Button with Tooltip (Reused) --- */
         .icon-btn-gradient {
-            /* Reset existing border/shadows and apply base colors */
-            border: 1px solid transparent !important; /* Force borderless initially */
+            border: 1px solid transparent !important;
             background-color: var(--bg-card);
             color: var(--color-text-primary);
             transition: all 0.2s ease-in-out;
-            position: relative; /* Needed for tooltip positioning */
-            box-shadow: none !important; /* Ensure no shadows interfere */
+            position: relative;
+            box-shadow: none !important;
+        }
+        
+        /* FIX: Theme toggle needs relative positioning for its tooltip child */
+        #theme-toggle {
+            position: relative;
         }
 
         .icon-btn-gradient:hover {
-            /* Set transparent border to prevent content shift when border-image is applied */
             border: 1px solid transparent; 
-            background-color: var(--bg-card); /* Keep background stable */
-            
-            /* Create the gradient border effect */
             border-image: linear-gradient(to right, var(--color-runtipi-red), var(--color-runtipi-blue)) 1;
-            /* The 1 at the end tells it to slice the entire image and use it as border */
-            transform: translateY(-1px); /* Subtle lift on hover */
+            transform: translateY(-1px);
         }
 
-        /* Tooltip Styling (DEFAULT: Upwards pop-up, used by footer buttons) */
+        /* General Tooltip Style (UPDATED: Smaller size, higher z-index) */
         .icon-btn-gradient .tooltip,
-        #theme-toggle .tooltip /* Added theme toggle here */
-        {
+        #theme-toggle .tooltip,
+        #logo-link .tooltip,
+        .footer-link-group .icon-btn-gradient .tooltip { /* Added target for footer links */
             visibility: hidden;
-            background-color: var(--color-runtipi-red); /* Red popup background */
+            background-color: var(--color-runtipi-red);
             color: #fff;
             text-align: center;
-            border-radius: 0.375rem; /* rounded-md */
-            padding: 0.5rem 0.75rem; /* py-2 px-3 */
+            border-radius: 0.375rem;
+            padding: 0.375rem 0.625rem; /* Reduced padding */
             position: absolute;
-            z-index: 10;
-            bottom: 100%; /* Position above the button */
-            left: 50%;
-            transform: translateX(-50%) translateY(-0.5rem); /* Center horizontally and lift slightly */
+            z-index: 20; /* Increased z-index */
             opacity: 0;
-            white-space: nowrap; /* Keep text on one line */
-            font-size: 0.875rem; /* text-sm */
-            font-weight: 500; /* font-medium */
-            pointer-events: none; /* Allows click events to pass through */
+            white-space: nowrap;
+            font-size: 0.75rem; /* Smaller font size (text-xs) */
+            font-weight: 500;
+            pointer-events: none;
             transition: opacity 0.2s, transform 0.2s;
         }
 
-        /* Tooltip Arrow (DEFAULT: Arrow points down) */
+        /* General Tooltip Arrow */
         .icon-btn-gradient .tooltip::after,
-        #theme-toggle .tooltip::after /* Added theme toggle here */
-        {
+        #theme-toggle .tooltip::after,
+        #logo-link .tooltip::after,
+        .footer-link-group .icon-btn-gradient .tooltip::after { /* Added target for footer links */
             content: "";
             position: absolute;
-            top: 100%; /* Arrow pointing down from the bottom of the tooltip */
+            top: 100%;
             left: 50%;
             margin-left: -5px;
             border-width: 5px;
@@ -186,55 +183,59 @@
             border-color: var(--color-runtipi-red) transparent transparent transparent;
         }
         
-        /* Show Tooltip on Hover (DEFAULT: Upwards) */
+        /* General Tooltip Visibility on Hover */
         .icon-btn-gradient:hover .tooltip,
-        #theme-toggle:hover .tooltip /* Added theme toggle here */
-        {
+        #theme-toggle:hover .tooltip,
+        #logo-link:hover .tooltip,
+        .footer-link-group .icon-btn-gradient:hover .tooltip { /* Added target for footer links */
             visibility: visible;
             opacity: 1;
-            transform: translateX(-50%) translateY(0); /* Move into final position */
         }
 
-        /* --- Custom Styles for Header GitHub Button & Theme Toggle (DOWNWARDS TOOLTIP) --- */
+        /* Specific positioning for HEADER elements (GitHub, Theme, Logo) - Tooltips appear BELOW */
         .header-github-btn .tooltip,
-        #theme-toggle .tooltip /* This overrides the default for header elements */
-        {
-            top: 100%; /* Position BELOW the button */
-            bottom: auto; /* Reset upward position */
-            transform: translateX(-50%) translateY(0.5rem); /* Start below the button */
+        #theme-toggle .tooltip,
+        #logo-link .tooltip { 
+            bottom: auto; 
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(0.5rem);
         }
 
         .header-github-btn:hover .tooltip,
-        #theme-toggle:hover .tooltip /* This overrides the default hover move for header elements */
-        {
-            transform: translateX(-50%) translateY(0); /* Move to final position just below button */
+        #theme-toggle:hover .tooltip,
+        #logo-link:hover .tooltip {
+            transform: translateX(-50%) translateY(0);
         }
 
-        /* Tooltip Arrow for Downwards Tooltip (Arrow points UP) */
+        /* Specific Arrow direction for HEADER elements (pointing UP to button) */
         .header-github-btn .tooltip::after,
-        #theme-toggle .tooltip::after /* This overrides the default arrow for header elements */
-        {
-            top: auto; /* Reset top position */
-            bottom: 100%; /* Place arrow at the top edge of the tooltip */
-            /* Invert arrow colors: transparent (top), transparent (right), red (bottom/up), transparent (left) */
+        #theme-toggle .tooltip::after,
+        #logo-link .tooltip::after { 
+            top: auto;
+            bottom: 100%;
             border-color: transparent transparent var(--color-runtipi-red) transparent; 
         }
+        
+        /* Specific positioning for FOOTER elements - Tooltips appear ABOVE */
+        .footer-link-group .icon-btn-gradient .tooltip {
+            top: auto;
+            bottom: 100%; /* Position above the element */
+            left: 50%;
+            transform: translateX(-50%) translateY(10px); /* Initial offset for smooth entrance */
+        }
 
-        /* Day/Night Toggle Styles (UPDATED: Borderless and added position: relative) */
-        #theme-toggle {
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 9999px; 
-            color: var(--color-text-primary);
-            background-color: var(--bg-card);
-            border: none; /* Made borderless */
-            position: relative; /* Needed for tooltip */
-            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+        .footer-link-group .icon-btn-gradient:hover .tooltip {
+            transform: translateX(-50%) translateY(0); /* Move up to final position on hover */
         }
-        #theme-toggle:hover {
-            background-color: var(--color-cta-hover);
-            transform: scale(1.05); /* Subtle scale effect on hover */
+
+        /* Specific Arrow direction for FOOTER elements (Arrow points DOWN from tooltip box to button) */
+        .footer-link-group .icon-btn-gradient .tooltip::after {
+            top: 100%; /* Position arrow at the bottom edge of the tooltip */
+            bottom: auto; 
+            border-color: var(--color-runtipi-red) transparent transparent transparent; /* Arrow points down */
         }
+
     </style>
 </head>
 <body class="min-h-screen antialiased">
@@ -243,8 +244,8 @@
 
         <!-- Navigation Bar -->
         <header class="flex justify-between items-center py-6 header-border border-b">
-            <!-- START: Logo/Title wrapped in an anchor tag for navigation/clickability -->
-            <a href="/" class="text-2xl font-bold flex items-center transition duration-200 hover:opacity-85 cursor-pointer">
+            <!-- Logo/Title wrapped in an anchor tag with ID for navigation -->
+            <a href="#" id="logo-link" class="text-2xl font-bold flex items-center transition duration-200 hover:opacity-85 cursor-pointer relative">
                 
                 <!-- START SVG Tipi Logo - Replicating Runtipi Style -->
                 <svg width="28" height="28" viewBox="0 0 30 30" fill="none" class="mr-3" xmlns="http://www.w3.org/2000/svg">
@@ -258,22 +259,24 @@
                     <!-- Horizontal Stripes (Yellowish-Pink) -->
                     <line x1="10" y1="12" x2="20" y2="12" stroke="#FFD180" stroke-width="2" stroke-linecap="round"/>
                     <line x1="8" y1="18" x2="22" y2="18" stroke="#FFD180" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="6" y1="24" y2="24" stroke="#FFD180" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="6" y1="24" x2="24" y2="24" stroke="#FFD180" stroke-width="2" stroke-linecap="round"/>
                 </svg>
                 <!-- END SVG Tipi Logo -->
                 
                 TipiGenerator
+                <!-- Tooltip for the logo link -->
+                <span class="tooltip">Return to Home</span>
             </a>
-            <!-- END: Logo/Title wrapped in an anchor tag -->
-            
-            <!-- Right-aligned Icons and Toggle (UPDATED: mr-8 for better tooltip display) -->
-            <div class="flex items-center space-x-4 mr-8">
-                <!-- GitHub Button/Icon Link -->
-                <a href="https://github.com/acidgreenservers" target="_blank" 
-                   class="icon-btn-gradient p-2 text-xl rounded-lg flex items-center justify-center w-10 h-10 header-github-btn" 
-                   data-tooltip="View Main GitHub Repo">
-                    <i class="fab fa-github"></i>
-                    <span class="tooltip">View Main GitHub Repo</span>
+            <!-- Right-aligned Icons and Toggle -->
+            <div class="flex items-center space-x-4">
+                <!-- GitHub Button/Icon Link (Star This Project) - WITH GITHUB LOGO AT END -->
+                <a href="https://github.com/acidgreenservers/runtipi-homelab-appstore" target="_blank" 
+                   class="icon-btn-gradient flex items-center text-color-primary font-medium py-2 px-4 rounded-lg header-github-btn" 
+                   data-tooltip="Star This Project">
+                    <i class="fas fa-star text-yellow-400 mr-2"></i>
+                    Star This Project
+                    <i class="fab fa-github ml-2"></i> 
+                    <span class="tooltip">Star This Project</span>
                 </a>
                 
                 <!-- Day/Night Toggle Switch -->
@@ -284,125 +287,112 @@
             </div>
         </header>
 
-        <!-- Hero Section -->
-        <main class="text-center pt-24 pb-28">
-            
-            <!-- PROMOTED GRADIENT HEADING (H1) -->
-            <h1 class="text-6xl sm:text-7xl font-extrabold tracking-tight mb-6 max-w-4xl mx-auto hero-title-shadow" style="line-height: 1.2;">
-                <!-- Runtipi in gradient, displayed as a block for the new line -->
-                <span class="text-gradient block">Runtipi</span>
-                <!-- App Generator in theme-specific primary color (inherited from body/h1) -->
-                <span class="block">App Generator</span>
-            </h1>
-            
-            <!-- UPDATED DESCRIPTIVE PARAGRAPH -->
-            <p class="text-xl text-secondary-dark mb-10 max-w-3xl mx-auto">
-                The Runtipi App Generator allows you to create and package custom, ready-to-go applications for immediate deployment to your personal AppStore. Simply input a standard `docker-compose.yaml` file, customize the application parameters, and download a complete zip archive ready to be added to your Runtipi AppStore.
-            </p>
-            
-            <!-- GENERATE APP BUTTON -->
-            <div class="flex justify-center mt-8">
-                <button class="btn-cta text-lg font-semibold py-4 px-12 rounded-lg">
-                    Generate App
-                </button>
-            </div>
+        <!-- HOME VIEW (Default landing page) -->
+        <div id="home-view" class="">
+             <main class="text-center pt-24 pb-28">
+                
+                <h1 class="text-6xl sm:text-7xl font-extrabold tracking-tight mb-6 max-w-4xl mx-auto hero-title-shadow" style="line-height: 1.2;">
+                    <span class="text-gradient block">Runtipi</span>
+                    <span class="block">App Generator</span>
+                </h1>
+                
+                <p class="text-xl text-secondary-dark mb-10 max-w-3xl mx-auto">
+                    The Runtipi App Generator allows you to create and package custom, ready-to-go applications for immediate deployment to your personal AppStore. Simply input a standard `docker-compose.yaml` file, customize the application parameters, and download a complete zip archive ready to be added to your Runtipi AppStore.
+                </p>
+                
+                <div class="flex justify-center mt-8">
+                    <!-- Button remains, but no longer has navigation logic -->
+                    <button id="generate-app-btn-home" class="btn-cta text-lg font-semibold py-4 px-12 rounded-lg">
+                        Start Generator
+                    </button>
+                </div>
 
-            <!-- Mock Dashboard Card (True dark style) -->
-            <div class="mt-28 p-3 mock-dashboard-bg rounded-xl shadow-2xl shadow-black/70">
-                <!-- This inner div is what the black border surrounds. -->
-                <div class="mock-dashboard-inner rounded-lg p-6 text-left border-dark border">
-                    <div class="flex items-center space-x-2 pb-4 border-b border-dark mb-4">
-                        <span class="w-3 h-3 bg-red-500 rounded-full"></span>
-                        <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
-                        <span class="w-3 h-3 bg-green-500 rounded-full"></span>
-                        <span class="ml-4 text-sm text-secondary-dark">App Generator Workflow</span>
-                    </div>
-                    <!-- Mock App Grid / Workflow Steps -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <!-- Card styling remains black/dark mode style to match Runtipi apps -->
-                        <div class="bg-black p-4 rounded-lg border-dark border feature-card transition cursor-pointer">
-                            <div class="text-2xl mb-2">📝</div>
-                            <!-- Updated to use text-gradient class -->
-                            <h4 class="font-semibold text-gradient mb-3">Input Yaml</h4>
-                            <p class="text-xs text-gray-400">Provide `docker-compose`</p>
+                <!-- Mock Dashboard Card (Reused for aesthetics) -->
+                <div class="mt-28 p-3 mock-dashboard-bg rounded-xl shadow-2xl shadow-black/70">
+                    <div class="mock-dashboard-inner rounded-lg p-6 text-left border-dark border">
+                        <div class="flex items-center space-x-2 pb-4 border-b border-dark mb-4">
+                            <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                            <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                            <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                            <span class="ml-4 text-sm text-secondary-dark">App Generator Workflow Preview</span>
                         </div>
-                        <div class="bg-black p-4 rounded-lg border-dark border feature-card transition cursor-pointer">
-                            <div class="text-2xl mb-2">🛠️</div>
-                            <!-- Updated to use text-gradient class -->
-                            <h4 class="font-semibold text-gradient mb-3">Edit Parameters</h4>
-                            <p class="text-xs text-gray-400">Adjust variables & ports</p>
-                        </div>
-                        <div class="bg-black p-4 rounded-lg border-dark border feature-card transition cursor-pointer">
-                            <div class="text-2xl mb-2">✅</div>
-                            <!-- Updated to use text-gradient class -->
-                            <h4 class="font-semibold text-gradient mb-3">Confirm Details</h4>
-                            <p class="text-xs text-gray-400">Final check of metadata</p>
-                        </div>
-                        <div class="bg-black p-4 rounded-lg border-dark border feature-card transition cursor-pointer">
-                            <div class="text-2xl mb-2">⬇️</div>
-                            <!-- Updated to use text-gradient class -->
-                            <h4 class="font-semibold text-gradient mb-3">Download App Zip!</h4>
-                            <p class="text-xs text-gray-400">Ready for AppStore</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="bg-black p-4 rounded-lg border-dark border feature-card transition cursor-pointer">
+                                <div class="text-2xl mb-2">📝</div>
+                                <h4 class="font-semibold text-gradient mb-3">Input Yaml</h4>
+                                <p class="text-xs text-gray-400">Provide `docker-compose`</p>
+                            </div>
+                            <div class="bg-black p-4 rounded-lg border-dark border feature-card transition cursor-pointer">
+                                <div class="text-2xl mb-2">🛠️</div>
+                                <h4 class="font-semibold text-gradient mb-3">Edit Parameters</h4>
+                                <p class="text-xs text-gray-400">Adjust variables & ports</p>
+                            </div>
+                            <div class="bg-black p-4 rounded-lg border-dark border feature-card transition cursor-pointer">
+                                <div class="text-2xl mb-2">✅</div>
+                                <h4 class="font-semibold text-gradient mb-3">Confirm Details</h4>
+                                <p class="text-xs text-gray-400">Final check of metadata</p>
+                            </div>
+                            <div class="bg-black p-4 rounded-lg border-dark border feature-card transition cursor-pointer">
+                                <div class="text-2xl mb-2">⬇️</div>
+                                <h4 class="font-semibold text-gradient mb-3">Download App Zip!</h4>
+                                <p class="text-xs text-gray-400">Ready for AppStore</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
+            </main>
 
-        <!-- Features Section (Updated) -->
-        <section class="py-24">
-            <h2 class="text-center mb-16" style="line-height: 1.2;">
-                <!-- Line 1: Powerful. Simple. Generator. (text-5xl) - always gradient -->
-                <span class="text-gradient text-5xl font-extrabold tracking-tight inline-block">Powerful. Simple. Generator.</span>
-                <br>
-                <!-- Line 2: Accelerated. Custom. Apps. (text-4xl, slightly smaller) - always gradient -->
-                <span class="text-gradient text-4xl font-extrabold tracking-tight inline-block mt-4">Accelerated. Custom. Apps.</span>
-            </h2>
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Feature Card 1 -->
-                <div class="bg-card-dark p-6 rounded-xl border-dark border feature-card transition duration-300 transform hover:shadow-xl hover:shadow-red-900/10">
-                    <div class="text-runtipi-red text-3xl mb-4">✍️</div>
-                    <h3 class="text-xl font-semibold text-color-primary mb-3">Compose File Parsing</h3>
-                    <p class="text-secondary-dark">Automatically analyze your standard Docker Compose YAML to extract necessary configuration variables and settings.</p>
+            <!-- Features Section (Reused) -->
+            <section class="py-24">
+                <h2 class="text-center mb-16" style="line-height: 1.2;">
+                    <span class="text-gradient text-5xl font-extrabold tracking-tight inline-block">Powerful. Simple. Generator.</span>
+                    <br>
+                    <span class="text-gradient text-4xl font-extrabold tracking-tight inline-block mt-4">Accelerated. Custom. Apps.</span>
+                </h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-card-dark p-6 rounded-xl border-dark border feature-card transition duration-300 transform hover:shadow-xl hover:shadow-red-900/10">
+                        <div class="text-runtipi-red text-3xl mb-4">✍️</div>
+                        <h3 class="text-xl font-semibold text-color-primary mb-3">Compose File Parsing</h3>
+                        <p class="text-secondary-dark">Automatically analyze your standard Docker Compose YAML to extract necessary configuration variables and settings.</p>
+                    </div>
+
+                    <div class="bg-card-dark p-6 rounded-xl border-dark border feature-card transition duration-300 transform hover:shadow-xl hover:shadow-red-900/10">
+                        <div class="text-runtipi-red text-3xl mb-4">📐</div>
+                        <h3 class="text-xl font-semibold text-color-primary mb-3">Runtipi Schema Mapping</h3>
+                        <p class="text-secondary-dark">Map your application's parameters directly to the Runtipi format, ensuring seamless integration with your custom AppStore.</p>
+                    </div>
+
+                    <div class="bg-card-dark p-6 rounded-xl border-dark border feature-card transition duration-300 transform hover:shadow-xl hover:shadow-red-900/10">
+                        <div class="text-runtipi-red text-3xl mb-4">⬇️</div>
+                        <h3 class="text-xl font-semibold text-color-primary mb-3">Instant Zip Packaging</h3>
+                        <p class="text-secondary-dark">Generate a single, complete ZIP file containing all required metadata and configurations, ready for immediate upload.</p>
+                    </div>
                 </div>
+            </section>
+        </div>
+        <!-- END HOME VIEW -->
 
-                <!-- Feature Card 2 -->
-                <div class="bg-card-dark p-6 rounded-xl border-dark border feature-card transition duration-300 transform hover:shadow-xl hover:shadow-red-900/10">
-                    <div class="text-runtipi-red text-3xl mb-4">📐</div>
-                    <h3 class="text-xl font-semibold text-color-primary mb-3">Runtipi Schema Mapping</h3>
-                    <p class="text-secondary-dark">Map your application's parameters directly to the Runtipi format, ensuring seamless integration with your custom AppStore.</p>
-                </div>
 
-                <!-- Feature Card 3 -->
-                <div class="bg-card-dark p-6 rounded-xl border-dark border feature-card transition duration-300 transform hover:shadow-xl hover:shadow-red-900/10">
-                    <div class="text-runtipi-red text-3xl mb-4">⬇️</div>
-                    <h3 class="text-xl font-semibold text-color-primary mb-3">Instant Zip Packaging</h3>
-                    <p class="text-secondary-dark">Generate a single, complete ZIP file containing all required metadata and configurations, ready for immediate upload.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Footer (Updated) -->
+        <!-- Footer (Kept updated links and text) -->
         <footer class="py-10 text-center text-slate-500 text-sm border-t border-dark">
             <p class="mb-4 text-secondary-dark">
                 Built with <span class="text-red-500">❤️</span> <span class="text-yellow-500">💪</span> XxZIOIMIBIExX®™ and <span class="text-runtipi-blue">🦾</span> Gemini <span class="text-runtipi-blue">🦾</span>
             </p>
             
-            <div class="flex justify-center space-x-4">
-                <!-- Button 1: GitHub Cat Button linking to the main repo -->
-                <a href="https://github.com/acidgreenservers" target="_blank" 
+            <div class="flex justify-center space-x-4 footer-link-group"> 
+                <!-- 1. Tools Directory -->
+                <a href="https://github.com/acidgreenservers/runtipi-homelab-appstore/tree/master/Tools" target="_blank" 
                    class="icon-btn-gradient flex items-center text-color-primary font-medium py-2 px-4 rounded-lg"
-                   data-tooltip="Main GitHub Profile">
+                   data-tooltip="View Generator Tools Directory">
                     <i class="fab fa-github text-lg mr-2"></i>
                     GitHub
-                    <span class="tooltip">Main GitHub Profile</span>
+                    <span class="tooltip">View Generator Tools Directory</span>
                 </a>
                 
-                <!-- Button 2: Tipi Icon linking to the runtipi-homelab-appstore repo -->
-                <a href="https://github.com/acidgreenservers/runtipi-homelab-appstore" target="_blank" 
+                <!-- 2. My GitHub Profile (Updated) -->
+                <a href="https://github.com/acidgreenservers" target="_blank" 
                    class="icon-btn-gradient flex items-center text-color-primary font-medium py-2 px-4 rounded-lg"
-                   data-tooltip="AppStore Repository">
-                    <!-- Tipi Logo SVG (Smaller version) -->
+                   data-tooltip="View My GitHub Profile">
                     <svg width="20" height="20" viewBox="0 0 30 30" fill="none" class="mr-2" xmlns="http://www.w3.org/2000/svg">
                         <path d="M15 4L27 26H3L15 4Z" fill="#F4511E"/>
                         <path d="M15 7L24 24H6L15 7Z" fill="var(--bg-body)"/>
@@ -410,82 +400,94 @@
                         <path d="M3 26L15 4" stroke="#FF66A3" stroke-width="2" stroke-linecap="round"/>
                         <line x1="10" y1="12" x2="20" y2="12" stroke="#FFD180" stroke-width="1.5" stroke-linecap="round"/>
                         <line x1="8" y1="18" x2="22" y2="18" stroke="#FFD180" stroke-width="1.5" stroke-linecap="round"/>
-                        <line x1="6" y1="24" y2="24" stroke="#FFD180" stroke-width="1.5" stroke-linecap="round"/>
+                        <line x1="6" y1="24" x2="24" y2="24" stroke="#FFD180" stroke-width="1.5" stroke-linecap="round"/>
                     </svg>
-                    AppStore Repo
-                    <span class="tooltip">AppStore Repository</span>
+                    GitHub Profile
+                    <span class="tooltip">View My GitHub Profile</span>
                 </a>
 
-                <!-- Button 3: GitHub Cat and Star (Mirroring the provided image style, without count) -->
-                <a href="https://github.com/acidgreenservers/runtipi-homelab-appstore/tree/master/Tools" target="_blank" 
+                <!-- 3. Official Store -->
+                <a href="https://github.com/runtipi/runtipi-appstore/tree/master" target="_blank" 
                    class="icon-btn-gradient flex items-center text-color-primary font-medium py-2 px-4 rounded-lg"
-                   data-tooltip="Star this Project!">
+                   data-tooltip="View Official Store">
                     <i class="fab fa-github text-lg mr-2"></i>
-                    <i class="fas fa-star text-yellow-400"></i>
-                    <span class="tooltip">Star this Project!</span>
+                    Official Store
+                    <span class="tooltip">View Official Store</span>
                 </a>
             </div>
         </footer>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const toggleButton = document.getElementById('theme-toggle');
+        // --- Theme Logic ---
+
+        const htmlElement = document.documentElement;
+
+        /**
+         * Updates the theme icon and the tooltip text based on the current theme.
+         * @param {string} theme - The current theme ('light' or 'dark').
+         */
+        function updateThemeContent(theme) {
             const themeIcon = document.getElementById('theme-icon');
-            const themeTooltip = document.getElementById('theme-tooltip'); // Get new tooltip element
-            const htmlElement = document.documentElement;
+            const themeTooltip = document.getElementById('theme-tooltip');
+            themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
+            themeTooltip.textContent = theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+        }
 
-            /**
-             * Updates the theme icon and the tooltip text based on the current theme.
-             * @param {string} theme - The current theme ('light' or 'dark').
-             */
-            function updateThemeContent(theme) {
-                // Update icon
-                themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
-                
-                // Update tooltip text to show the action (what the click will do)
-                themeTooltip.textContent = theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode';
-            }
-
-            /**
-             * Applies theme-specific visual classes (like hero shadow).
-             * @param {string} theme - The current theme ('light' or 'dark').
-             */
-            function applyThemeVisuals(theme) {
-                const heroTitle = document.querySelector('h1');
-                
-                if (heroTitle) {
-                    if (theme === 'light') {
-                        heroTitle.classList.remove('hero-title-shadow');
-                    } else {
-                        heroTitle.classList.add('hero-title-shadow');
-                    }
+        /**
+         * Applies theme-specific visual classes (like hero shadow).
+         * @param {string} theme - The current theme ('light' or 'dark').
+         */
+        function applyThemeVisuals(theme) {
+            const heroTitle = document.querySelector('h1');
+            if (heroTitle) {
+                if (theme === 'light') {
+                    heroTitle.classList.remove('hero-title-shadow');
+                } else {
+                    heroTitle.classList.add('hero-title-shadow');
                 }
             }
+        }
+        
+        function toggleTheme() {
+            const oldTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = oldTheme === 'dark' ? 'light' : 'dark';
             
-            function toggleTheme() {
-                const oldTheme = htmlElement.getAttribute('data-theme');
-                const newTheme = oldTheme === 'dark' ? 'light' : 'dark';
-                
-                // Update HTML attribute and local storage
-                htmlElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
+            // Update HTML attribute and local storage
+            htmlElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
 
-                // Update icon, tooltip, and visuals
-                updateThemeContent(newTheme);
-                applyThemeVisuals(newTheme);
-            }
+            // Update icon, tooltip, and visuals
+            updateThemeContent(newTheme);
+            applyThemeVisuals(newTheme);
+        }
 
-            // Set initial theme based on preference or default to 'dark'
+        // --- Event Listeners and Initial Setup ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleButton = document.getElementById('theme-toggle');
+            const generateHomeBtn = document.getElementById('generate-app-btn-home');
+
+            // --- Theme Initialization ---
             const currentTheme = localStorage.getItem('theme') || 'dark';
             htmlElement.setAttribute('data-theme', currentTheme);
-            updateThemeContent(currentTheme); // Use new function for initial content set
-            
-            // Listen for click on the toggle button
-            toggleButton.addEventListener('click', toggleTheme);
-            
-            // Initial run to set visuals (including shadow) based on saved theme
+            updateThemeContent(currentTheme);
             applyThemeVisuals(currentTheme);
+            toggleButton.addEventListener('click', toggleTheme);
+
+            // Placeholder for Start Generator button, now that multi-step view is removed
+            if (generateHomeBtn) {
+                 generateHomeBtn.addEventListener('click', () => {
+                    console.log("Start Generator clicked. Ready for next feature development.");
+                    // You can add logic here if you want the button to do something static.
+                });
+            }
+
+            // Simple click listener for the logo link (already on home page, but good practice)
+            document.getElementById('logo-link').addEventListener('click', (e) => {
+                e.preventDefault();
+                window.scrollTo(0, 0);
+            });
         });
     </script>
 </body>
