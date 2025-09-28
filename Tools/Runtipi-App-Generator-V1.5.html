@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runtipi Blueprint Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <!-- CodeMirror for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/yaml/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    
+    <!-- Libraries for ZIP generation and download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        /* Custom styles for CodeMirror */
+        .CodeMirror {
+            border: 1px solid #4B5563; /* Darker border for dark mode */
+            height: 400px;
+            font-family: 'Inter', 'Consolas', monospace;
+            font-size: 14px;
+            border-radius: 0.5rem;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+            background-color: #374151; /* Dark editor background */
+            color: #F3F4F6; /* Light text in editor */
+        }
+        /* Style adjustments for output editors */
+        #compose-editor .CodeMirror, #config-editor .CodeMirror {
+             height: 100% !important; 
+        }
+        /* Body and Font Styling - NEW DARK BACKGROUND */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Deep Navy Blue to match Runtipi's dark theme */
+        }
+
+        /* Custom Gradient for the Header */
+        .runtipi-header-gradient {
+            /* Full gradient from deep blue/purple (#4c51bf) to rose red (#e11d48) */
+            background: linear-gradient(to right, #4c51bf, #e11d48); 
+        }
+        
+        /* Utility class for primary button styling based on previous theme */
+        .btn-primary-style {
+            /* Using Tailwind classes for the indigo theme, shadows, and transitions */
+            @apply bg-indigo-600 text-white font-bold shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.02];
+        }
+
+        /* Adjusting for disabled state */
+        .btn-primary-style:disabled {
+            @apply bg-gray-400 cursor-not-allowed transform-none shadow-md;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Full-width Gradient Header -->
+    <div class="runtipi-header-gradient text-white shadow-xl">
+        <div class="max-w-7xl mx-auto p-4 md:p-8">
+            <h1 class="text-4xl font-extrabold mb-2">Runtipi Blueprint Generator</h1>
+            <p class="mb-0 text-gray-200">Convert standard Docker Compose YAML into the required Runtipi App Store JSON format, including automatic **`form_fields`** generation.</p>
+        </div>
+    </div>
+
+<div id="app" class="max-w-7xl mx-auto p-4 md:p-8 pt-6">
+    <!-- App Configuration Form - NEW DARK CARD -->
+    <div class="bg-gray-900 p-6 rounded-2xl shadow-xl mb-8 border border-indigo-700">
+        <h2 class="text-2xl font-semibold text-white mb-4">App Metadata</h2>
+        
+        <!-- Primary Metadata Row -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-300">App ID (Folder Name) *</label>
+                <input type="text" v-model="metadata.id" @input="clearError" placeholder="e.g., myapp" 
+                       class="mt-1 block w-full rounded-md border-gray-600 shadow-sm p-2 border bg-gray-700 text-white placeholder-gray-400">
+                <p class="text-xs text-gray-400 mt-1">Must be unique and lowercase.</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300">App Name (Display) *</label>
+                <input type="text" v-model="metadata.name" @input="clearError" placeholder="e.g., My Awesome App" 
+                       class="mt-1 block w-full rounded-md border-gray-600 shadow-sm p-2 border bg-gray-700 text-white placeholder-gray-400">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300">App Version *</label>
+                <input type="text" v-model="metadata.version" @input="clearError" placeholder="e.g., 1.0.0" 
+                       class="mt-1 block w-full rounded-md border-gray-600 shadow-sm p-2 border bg-gray-700 text-white placeholder-gray-400">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300">Internal/Default Host Port *</label>
+                <input type="number" v-model.number="metadata.port" @input="clearError" placeholder="e.g., 8080" 
+                       class="mt-1 block w-full rounded-md border-gray-600 shadow-sm p-2 border bg-gray-700 text-white placeholder-gray-400">
+                <p class="text-xs text-gray-400 mt-1">The main access port.</p>
+            </div>
+        </div>
+
+        <!-- Secondary Metadata Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-300">Short Description (for Listing) *</label>
+                <input type="text" v-model="metadata.short_desc" @input="clearError" placeholder="A brief, one-sentence description." 
+                       class="mt-1 block w-full rounded-md border-gray-600 shadow-sm p-2 border bg-gray-700 text-white placeholder-gray-400">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300">Categories (Comma Separated) *</label>
+                <input type="text" v-model="metadata.categories" @input="clearError" placeholder="e.g., utilities, media, network" 
+                       class="mt-1 block w-full rounded-md border-gray-600 shadow-sm p-2 border bg-gray-700 text-white placeholder-gray-400">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300">Author/Maintainer Name</label>
+                <input type="text" v-model="metadata.author" placeholder="e.g., John Doe" 
+                       class="mt-1 block w-full rounded-md border-gray-600 shadow-sm p-2 border bg-gray-700 text-white placeholder-gray-400">
+            </div>
+        </div>
+        
+        <!-- Long Description -->
+        <div>
+            <label class="block text-sm font-medium text-gray-300">Long Description (Markdown for `description.md`) *</label>
+            <textarea v-model="metadata.longDescription" @input="clearError" rows="6" placeholder="Write a detailed description of the app here, using Markdown formatting." 
+                      class="mt-1 block w-full rounded-md border-gray-600 shadow-sm p-3 border resize-y bg-gray-700 text-white placeholder-gray-400"></textarea>
+        </div>
+    </div>
+
+    <!-- Download ZIP Button (Top) -->
+    <div class="flex justify-end mb-8">
+        <button @click="downloadZip" 
+                :disabled="!composeJsonOutput || downloading"
+                class="btn-primary-style px-6 py-3 rounded-xl text-lg font-bold shadow-md flex items-center transition duration-150">
+            <svg v-if="downloading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span v-else>Download {{ metadata.id }}.zip Blueprint</span>
+        </button>
+    </div>
+
+    <!-- YAML Input and JSON Output -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Docker Compose YAML Input -->
+        <div>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-white">1. Docker Compose YAML Input</h2>
+                <!-- Generate Button -->
+                <button @click="parseDockerCompose" :disabled="!metadata.id || !metadata.name || !metadata.version || !metadata.port || !metadata.categories || !metadata.longDescription"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-md transition duration-150 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    Generate Blueprints
+                </button>
+            </div>
+            <!-- The textarea below is hidden but necessary for CodeMirror initialization -->
+            <textarea id="yaml-input" v-model="yamlInput" class="hidden"></textarea>
+            <div id="yaml-editor" class="CodeMirror"></div>
+            
+            <!-- "Input YAML" BUTTON -->
+            <button @click="parseDockerCompose" 
+                    :disabled="yamlInput.trim().length === 0"
+                    :class="{'bg-indigo-600 hover:bg-indigo-700': yamlInput.trim().length > 0, 'bg-gray-400 cursor-not-allowed': yamlInput.trim().length === 0}"
+                    class="mt-4 px-4 py-2 rounded-xl text-sm font-medium shadow-md text-white transition duration-150">
+                Input YAML
+            </button>
+            
+            <p v-if="error" class="text-red-400 mt-4 p-3 bg-red-900 rounded-md border border-red-700">
+                **Error:** {{ error }}
+            </p>
+        </div>
+
+        <!-- Runtipi JSON Output -->
+        <div>
+            <h2 class="text-2xl font-semibold text-white mb-4">2. Runtipi File Outputs</h2>
+
+            <div v-if="composeJsonOutput || configJsonOutput" class="space-y-6">
+                <!-- docker-compose.json - NEW DARK CARD -->
+                <div class="bg-gray-800 p-4 rounded-xl shadow border border-indigo-800">
+                    <h3 class="text-lg font-medium text-white mb-2">`docker-compose.json`</h3>
+                    <div id="compose-editor" class="CodeMirror" style="height: 200px;"></div>
+                    <button @click="copyToClipboard(composeJsonOutput, 'docker-compose.json')" 
+                            :disabled="!composeJsonOutput"
+                            class="mt-3 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl transition duration-150">
+                        Copy to Clipboard
+                    </button>
+                </div>
+
+                <!-- config.json - NEW DARK CARD -->
+                <div class="bg-gray-800 p-4 rounded-xl shadow border border-indigo-800">
+                    <h3 class="text-lg font-medium text-white mb-2">`config.json`</h3>
+                    <div id="config-editor" class="CodeMirror" style="height: 300px;"></div>
+                    <button @click="copyToClipboard(configJsonOutput, 'config.json')" 
+                            :disabled="!configJsonOutput"
+                            class="mt-3 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl transition duration-150">
+                        Copy to Clipboard
+                    </button>
+                    <p class="text-xs text-gray-400 mt-2">
+                        **Form Fields Generated:** {{ JSON.parse(configJsonOutput || '{}').form_fields?.length || 0 }}
+                    </p>
+                </div>
+
+                <!-- metadata/description.md - NEW DARK CARD -->
+                <div class="bg-gray-800 p-4 rounded-xl shadow border border-indigo-800">
+                    <h3 class="text-lg font-medium text-white mb-2">`metadata/description.md`</h3>
+                    <pre class="bg-gray-700 p-4 rounded-lg text-gray-300 text-sm whitespace-pre-wrap max-h-48 overflow-auto">{{ descriptionMarkdown }}</pre>
+                    <button @click="copyToClipboard(descriptionMarkdown, 'description.md')" 
+                            class="mt-3 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl transition duration-150">
+                        Copy to Clipboard
+                    </button>
+                    <p class="text-xs text-gray-400 mt-2">
+                        <span v-if="iconFound" class="text-green-400">Icon found, converted to JPEG, and will be included as `metadata/logo.jpg`!</span>
+                        <span v-else class="text-yellow-400">No icon found for this ID. Don't forget to include a square `logo.png` or `logo.jpg` manually!</span>
+                    </p>
+                </div>
+            </div>
+            <p v-else class="text-gray-400 mt-4 p-4 bg-gray-800 rounded-lg">
+                Enter your Docker Compose YAML and app details to generate the Runtipi files.
+            </p>
+        </div>
+    </div>
+
+    <!-- Download ZIP Button (Bottom) -->
+    <div class="flex justify-center mt-10">
+        <button @click="downloadZip" 
+                :disabled="!composeJsonOutput || downloading"
+                class="btn-primary-style px-6 py-3 rounded-xl text-lg font-bold shadow-md w-full max-w-lg flex items-center justify-center transition duration-150">
+            <svg v-if="downloading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span v-else>Download Complete Blueprint ZIP</span>
+        </button>
+    </div>
+
+</div>
+
+<script>
+new Vue({
+    el: '#app',
+    data: {
+        yamlInput: `version: '3.8'
+services:
+  myapp:
+    image: myrepo/myapp:latest
+    container_name: myapp
+    ports:
+      - \${HOST_PORT}:8080
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - ADMIN_PASSWORD=$$$SET_ME$$$
+      - DB_USER=myuser
+      - DB_NAME=mydb
+    volumes:
+      - /opt/runtipi/appdata/myapp/data:/config
+    restart: unless-stopped`,
+        metadata: {
+            id: 'myapp',
+            name: 'My Custom App',
+            port: 8080,
+            version: '1.0.0', 
+            author: 'Runtipi Dev', 
+            short_desc: 'A simple, custom application boilerplate for Runtipi.',
+            categories: 'utilities',
+            longDescription: `# My Custom App
+
+This is a complete and detailed description of my app. It highlights the key features, setup process, and why users should install it.
+
+### Features
+- Feature 1: Does something cool.
+- Feature 2: Is super fast.
+
+**Note:** Remember to check the port and environment variables before deploying!`,
+        },
+        error: '',
+        downloading: false,
+        iconFound: false,
+        yamlEditor: null,
+        composeEditor: null,
+        configEditor: null,
+        composeJsonOutput: '',
+        configJsonOutput: '',
+        descriptionMarkdown: ''
+    },
+    watch: {
+        composeJsonOutput(newValue) {
+            if (this.composeEditor) {
+                this.composeEditor.setValue(newValue);
+                this.composeEditor.refresh(); 
+            }
+        },
+        configJsonOutput(newValue) {
+            if (this.configEditor) {
+                this.configEditor.setValue(newValue);
+                this.configEditor.refresh(); 
+            }
+        }
+    },
+    mounted() {
+        // Initialize CodeMirror editor for YAML input
+        this.yamlEditor = this.initCodeMirror('yaml-editor', 'yaml', this.yamlInput, false);
+
+        this.yamlEditor.on('change', () => {
+            this.yamlInput = this.yamlEditor.getValue();
+        });
+
+        // Initialize output editors, but keep them empty initially
+        this.composeEditor = this.initCodeMirror('compose-editor', 'javascript', this.composeJsonOutput, true);
+        this.configEditor = this.initCodeMirror('config-editor', 'javascript', this.configJsonOutput, true);
+
+        // Generate initial output on load
+        this.$nextTick(() => { 
+            // The null checks in parseDockerCompose() now handle any race conditions here.
+            this.parseDockerCompose();
+        });
+    },
+    methods: {
+        clearError() {
+            this.error = '';
+        },
+        initCodeMirror(elementId, mode, value, readOnly) {
+            const element = document.getElementById(elementId);
+            if (!element) return null; // Returns null if element not found!
+            return CodeMirror(element, {
+                value: value,
+                mode: mode === 'javascript' ? {name: "javascript", json: true} : mode, // Use JSON mode for JSON
+                lineNumbers: true,
+                readOnly: readOnly,
+                theme: 'default',
+                tabSize: 2,
+                indentUnit: 2
+            });
+        },
+        
+        titleCase(str) {
+            if (!str) return '';
+            return str.toLowerCase().split(' ').map((word) => {
+                return (word.charAt(0).toUpperCase() + word.slice(1));
+            }).join(' ');
+        },
+
+        getDynamicFormFields(yamlObject) {
+            const formFields = [];
+            const processedVars = new Set();
+            
+            if (!yamlObject || !yamlObject.services) return formFields;
+
+            for (const serviceName in yamlObject.services) {
+                const service = yamlObject.services[serviceName];
+
+                if (service.environment) {
+                    let environment = service.environment;
+                    
+                    let envMap = {};
+                    if (Array.isArray(environment)) {
+                        environment.forEach(item => {
+                            const [key, val] = item.split('=').map(s => s.trim());
+                            if (key) envMap[key] = val;
+                        });
+                    } else if (typeof environment === 'object' && environment !== null) {
+                        envMap = environment;
+                    }
+
+                    for (const key in envMap) {
+                        const val = envMap[key];
+                        if (Object.prototype.hasOwnProperty.call(envMap, key) && !processedVars.has(key)) {
+                            this.processEnvVariable(key, val || '', formFields, processedVars);
+                        }
+                    }
+                }
+            }
+            return formFields;
+        },
+
+        processEnvVariable(key, value, formFields, processedVars) {
+            let type = 'text';
+            let label = this.titleCase(key.replace(/_/g, ' '));
+            let required = true;
+
+            if (key.includes('PASSWORD') || key.includes('SECRET') || key.includes('KEY')) {
+                type = 'password';
+            } else if (key.includes('PORT')) {
+                type = 'number';
+            }
+
+            const isDynamicPlaceholder = value === '' || 
+                                         (typeof value === 'string' && 
+                                          (value.startsWith('$') || 
+                                           value.includes('$$$') || 
+                                           value.toLowerCase().includes('set_me') ||
+                                           value.includes('\${')));
+
+            if (isDynamicPlaceholder || type === 'password') {
+                processedVars.add(key);
+                formFields.push({
+                    type: type,
+                    label: label,
+                    required: required,
+                    env_variable: key
+                });
+            }
+        },
+
+        parseDockerCompose() {
+            this.error = '';
+            this.composeJsonOutput = '';
+            this.configJsonOutput = '';
+            this.iconFound = false;
+
+            // SAFELY get YAML input value
+            this.yamlInput = this.yamlEditor ? this.yamlEditor.getValue() : this.yamlInput; 
+
+            if (!this.metadata.id || !this.metadata.name || !this.metadata.version || !this.metadata.port || !this.metadata.categories || !this.metadata.longDescription) {
+                this.error = "All required metadata fields (marked with *) must be filled out before generating.";
+                return;
+            }
+
+            const yamlContent = this.yamlInput;
+
+            if (!yamlContent.trim()) {
+                this.error = "Docker Compose YAML input is empty.";
+                return;
+            }
+
+            try {
+                const yamlObject = jsyaml.load(yamlContent);
+
+                if (!yamlObject || !yamlObject.services) {
+                    throw new Error("Invalid Docker Compose format. 'services' section is missing or empty.");
+                }
+
+                const formFields = this.getDynamicFormFields(yamlObject);
+
+                const runtipiCompose = { services: [] };
+
+                for (const serviceName in yamlObject.services) {
+                    const service = yamlObject.services[serviceName];
+                    
+                    const runtipiService = {
+                        name: serviceName,
+                        image: service.image,
+                        isMain: true, 
+                        internalPort: this.metadata.port, 
+                    };
+
+                    if (service.environment) {
+                        runtipiService.environment = [];
+                        let environment = service.environment;
+                        
+                        let envMap = {};
+                        if (Array.isArray(environment)) {
+                            environment.forEach(item => {
+                                const [key, val] = item.split('=').map(s => s.trim());
+                                if (key) envMap[key] = val;
+                            });
+                        } else if (typeof environment === 'object' && environment !== null) {
+                            envMap = environment;
+                        }
+
+                        for (const key in envMap) {
+                            const isFormField = formFields.some(f => f.env_variable === key);
+                            const finalValue = isFormField ? `\${${key}}` : envMap[key] || '';
+                            
+                            runtipiService.environment.push({ name: key, value: finalValue });
+                        }
+                    }
+
+                    if (service.ports && service.ports.length > 0) {
+                        let internalPort = this.metadata.port;
+                        const firstPortMapping = service.ports[0];
+                        
+                        if (typeof firstPortMapping === 'string') {
+                            const parts = firstPortMapping.split(':');
+                            internalPort = parseInt(parts.length === 2 ? parts[1] : parts[0]);
+                        } else if (typeof firstPortMapping === 'number') {
+                            internalPort = firstPortMapping;
+                        }
+
+                        if (!isNaN(internalPort)) {
+                            runtipiService.internalPort = internalPort;
+                        }
+                    }
+
+                    if (service.volumes && service.volumes.length > 0) {
+                        runtipiService.volumes = service.volumes.map(volume => {
+                            const [source, target] = volume.split(':').map(s => s.trim());
+                            const finalSource = source.startsWith('/') ? source.replace('/opt/runtipi/appdata/', 'appdata/') : source;
+                            return { source: finalSource, target };
+                        });
+                    }
+
+                    if (service.labels) {
+                         let labels = service.labels;
+                         if (Array.isArray(labels)) {
+                             const labelObject = {};
+                             labels.forEach(label => {
+                                 const [key, value] = label.split('=').map(s => s.trim());
+                                 if (key) labelObject[key] = value;
+                             });
+                             labels = labelObject;
+                         }
+                         runtipiService.labels = labels;
+                    }
+                    
+                    runtipiCompose.services.push(runtipiService);
+                }
+
+                const configJson = {
+                    id: this.metadata.id.toLowerCase().replace(/[^a-z0-9-]/g, ''),
+                    name: this.metadata.name,
+                    available: true,
+                    port: this.metadata.port,
+                    exposable: true,
+                    dynamic_config: true,
+                    description: this.metadata.longDescription, 
+                    tipi_version: 1,
+                    version: this.metadata.version,
+                    categories: this.metadata.categories.split(',').map(c => c.trim()).filter(c => c),
+                    short_desc: this.metadata.short_desc,
+                    author: this.metadata.author,
+                    source: "https://github.com/your-repo/your-app", 
+                    website: "https://your-website.com", 
+                    form_fields: formFields, 
+                    supported_architectures: ["arm64", "amd64"],
+                    created_at: new Date().getTime(),
+                    updated_at: new Date().getTime()
+                };
+
+                this.composeJsonOutput = JSON.stringify(runtipiCompose, null, 2);
+                this.configJsonOutput = JSON.stringify(configJson, null, 2);
+                this.descriptionMarkdown = this.metadata.longDescription;
+                
+                // Update content if already initialized - ADDING NULL CHECKS HERE
+                if (this.composeEditor) {
+                    this.composeEditor.setValue(this.composeJsonOutput);
+                    this.composeEditor.refresh();
+                }
+                if (this.configEditor) {
+                    this.configEditor.setValue(this.configJsonOutput);
+                    this.configEditor.refresh();
+                }
+
+            } catch (e) {
+                this.error = e.message;
+            }
+        },
+
+        // Function to handle fetching PNG and converting to JPEG ArrayBuffer
+        async fetchAndConvertIcon(url, format = 'image/jpeg') {
+            try {
+                const response = await fetch(url);
+                if (!response.ok || response.headers.get('Content-Type').startsWith('text/')) {
+                    // Skip if 404 or not an image
+                    return null; 
+                }
+                const blob = await response.blob();
+
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            
+                            // Draw the image, converting PNG transparency to white background (standard for JPEG conversion)
+                            ctx.fillStyle = "#ffffff";
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(img, 0, 0);
+
+                            // Convert to JPEG blob (quality 0.9 for good balance)
+                            canvas.toBlob((jpegBlob) => {
+                                if (jpegBlob) {
+                                    const fileReader = new FileReader();
+                                    fileReader.onload = () => resolve(fileReader.result); // Resolve with ArrayBuffer
+                                    fileReader.onerror = reject;
+                                    fileReader.readAsArrayBuffer(jpegBlob);
+                                } else {
+                                    reject(new Error("Canvas failed to create JPEG blob."));
+                                }
+                            }, format, 0.9);
+                        };
+                        img.onerror = () => reject(new Error("Image failed to load."));
+                        img.src = e.target.result;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (e) {
+                console.error("Error fetching or converting icon:", e);
+                return null;
+            }
+        },
+
+        async downloadZip() {
+            if (!this.composeJsonOutput) {
+                this.error = 'Please generate the blueprints first before downloading.';
+                return;
+            }
+
+            this.downloading = true;
+            this.iconFound = false;
+            const zip = new JSZip();
+            const folderName = this.metadata.id.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            
+            // 1. Create the main app folder
+            const appFolder = zip.folder(folderName);
+            
+            // 2. Add required files
+            appFolder.file("config.json", this.configJsonOutput);
+            appFolder.file("docker-compose.json", this.composeJsonOutput);
+            appFolder.file("docker-compose.yml", this.yamlInput); // Original YAML input
+            
+            // 3. Add metadata folder and description.md
+            const metadataFolder = appFolder.folder("metadata");
+            metadataFolder.file("description.md", this.descriptionMarkdown);
+
+            // 4. Try to fetch the PNG and convert it to JPEG
+            const iconUrl = `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${folderName}.png`;
+            
+            try {
+                const iconArrayBuffer = await this.fetchAndConvertIcon(iconUrl, 'image/jpeg');
+
+                if (iconArrayBuffer) {
+                    // Save as logo.jpg
+                    metadataFolder.file("logo.jpg", iconArrayBuffer, { binary: true });
+                    this.iconFound = true;
+                } else {
+                    this.iconFound = false;
+                }
+            } catch (e) {
+                console.error("Icon conversion/fetch error:", e);
+                this.iconFound = false;
+            }
+
+            // 5. Generate and trigger download
+            zip.generateAsync({ type: "blob" })
+                .then(content => {
+                    saveAs(content, `${folderName}.zip`);
+                })
+                .catch(e => {
+                    this.error = "Failed to create ZIP file: " + e.message;
+                })
+                .finally(() => {
+                    this.downloading = false;
+                });
+        },
+
+        copyToClipboard(content, fileName) {
+            if (!content) return;
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = content;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                // Use document.execCommand('copy') for better iframe compatibility
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                const message = document.createElement('div');
+                message.textContent = `${fileName} content copied!`;
+                message.className = 'fixed bottom-5 right-5 bg-green-500 text-white p-3 rounded-lg shadow-xl z-50 transition-opacity duration-300';
+                document.body.appendChild(message);
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                    setTimeout(() => message.remove(), 300);
+                }, 1500);
+
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                
+                const message = document.createElement('div');
+                message.textContent = `Could not copy ${fileName}. Please select and copy manually.`;
+                message.className = 'fixed bottom-5 right-5 bg-red-500 text-white p-3 rounded-lg shadow-xl z-50 transition-opacity duration-300';
+                document.body.appendChild(message);
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                    setTimeout(() => message.remove(), 300);
+                }, 2500);
+            }
+        }
+    }
+});
+</script>
+</body>
+</html>
+

@@ -1,0 +1,56 @@
+{
+  "id": "affine",
+  "name": "AFFiNE",
+  "available": true,
+  "port": 3010,
+  "exposable": true,
+  "dynamic_config": true,
+  "description": "# My Custom App\n\nThis is a complete and detailed description of my app. It highlights the key features, setup process, and why users should install it.\n\n### Features\n- Feature 1: Does something cool.\n- Feature 2: Is super fast.\n\n**Note:** Remember to check the port and environment variables before deploying!",
+  "tipi_version": 1,
+  "version": "latest",
+  "categories": [
+    "utilities"
+  ],
+  "short_desc": "A simple, custom application boilerplate for Runtipi.",
+  "author": "Community Dev",
+  "source": "https://github.com/your-repo/your-app",
+  "website": "https://your-website.com",
+  "form_fields": [
+    {
+      "type": "text",
+      "label": "Database Url",
+      "required": true,
+      "env_variable": "DATABASE_URL"
+    },
+    {
+      "type": "text",
+      "label": "Affine Admin Email",
+      "required": true,
+      "env_variable": "AFFINE_ADMIN_EMAIL"
+    },
+    {
+      "type": "password",
+      "label": "Affine Admin Password",
+      "required": true,
+      "env_variable": "AFFINE_ADMIN_PASSWORD"
+    },
+    {
+      "type": "text",
+      "label": "Telemetry Enable",
+      "required": true,
+      "env_variable": "TELEMETRY_ENABLE"
+    },
+    {
+      "type": "password",
+      "label": "Postgres Password",
+      "required": true,
+      "env_variable": "POSTGRES_PASSWORD"
+    }
+  ],
+  "supported_architectures": [
+    "arm64",
+    "amd64"
+  ],
+  "created_at": 1759083420953,
+  "updated_at": 1759083420953
+}

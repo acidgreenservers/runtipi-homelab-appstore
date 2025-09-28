@@ -1,0 +1,116 @@
+{
+  "services": [
+    {
+      "name": "affine",
+      "image": "ghcr.io/toeverything/affine:stable",
+      "isMain": true,
+      "internalPort": 3010,
+      "environment": [
+        {
+          "name": "AFFINE_CONFIG_PATH",
+          "value": "/root/.affine/config"
+        },
+        {
+          "name": "REDIS_SERVER_HOST",
+          "value": "affine-redis"
+        },
+        {
+          "name": "DATABASE_URL",
+          "value": "${DATABASE_URL}"
+        },
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "AFFINE_ADMIN_EMAIL",
+          "value": "${AFFINE_ADMIN_EMAIL}"
+        },
+        {
+          "name": "AFFINE_ADMIN_PASSWORD",
+          "value": "${AFFINE_ADMIN_PASSWORD}"
+        },
+        {
+          "name": "TELEMETRY_ENABLE",
+          "value": "${TELEMETRY_ENABLE}"
+        }
+      ],
+      "volumes": [
+        {
+          "source": "${APP_DATA_DIR}/data/config",
+          "target": "/root/.affine/config"
+        },
+        {
+          "source": "${APP_DATA_DIR}/data/storage",
+          "target": "/root/.affine/storage"
+        }
+      ],
+      "labels": {
+        "traefik.enable": true,
+        "traefik.http.middlewares.affine-web-redirect.redirectscheme.scheme": "https",
+        "traefik.http.services.affine.loadbalancer.server.port": 3010,
+        "traefik.http.routers.affine-insecure.rule": "Host(`${APP_DOMAIN}`)",
+        "traefik.http.routers.affine-insecure.entrypoints": "web",
+        "traefik.http.routers.affine-insecure.service": "affine",
+        "traefik.http.routers.affine-insecure.middlewares": "affine-web-redirect",
+        "traefik.http.routers.affine.rule": "Host(`${APP_DOMAIN}`)",
+        "traefik.http.routers.affine.entrypoints": "websecure",
+        "traefik.http.routers.affine.service": "affine",
+        "traefik.http.routers.affine.tls.certresolver": "myresolver",
+        "traefik.http.routers.affine-local-insecure.rule": "Host(`affine.${LOCAL_DOMAIN}`)",
+        "traefik.http.routers.affine-local-insecure.entrypoints": "web",
+        "traefik.http.routers.affine-local-insecure.service": "affine",
+        "traefik.http.routers.affine-local-insecure.middlewares": "affine-web-redirect",
+        "traefik.http.routers.affine-local.rule": "Host(`affine.${LOCAL_DOMAIN}`)",
+        "traefik.http.routers.affine-local.entrypoints": "websecure",
+        "traefik.http.routers.affine-local.service": "affine",
+        "traefik.http.routers.affine-local.tls": true,
+        "runtipi.managed": true
+      }
+    },
+    {
+      "name": "affine-redis",
+      "image": "redis",
+      "isMain": true,
+      "internalPort": 3010,
+      "volumes": [
+        {
+          "source": "${APP_DATA_DIR}/data/redis",
+          "target": "/data"
+        }
+      ],
+      "labels": {
+        "runtipi.managed": true
+      }
+    },
+    {
+      "name": "affine-postgres",
+      "image": "postgres:16",
+      "isMain": true,
+      "internalPort": 3010,
+      "environment": [
+        {
+          "name": "POSTGRES_USER",
+          "value": "tipi"
+        },
+        {
+          "name": "POSTGRES_PASSWORD",
+          "value": "${POSTGRES_PASSWORD}"
+        },
+        {
+          "name": "POSTGRES_DB",
+          "value": "affine"
+        }
+      ],
+      "volumes": [
+        {
+          "source": "${APP_DATA_DIR}/data/postgres",
+          "target": "/var/lib/postgresql/data"
+        }
+      ],
+      "labels": {
+        "runtipi.managed": true
+      }
+    }
+  ]
+}

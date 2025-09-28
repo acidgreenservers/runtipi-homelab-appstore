@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Runtipi App Store Blueprint Generator</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom Tailwind Configuration */
+    :root {
+      --primary-runtipi: #007bff; /* A nice blue/indigo for Runtipi feel */
+    }
+    .CodeMirror {
+      height: 100%;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db; /* gray-300 */
+      font-size: 14px;
+    }
+    .CodeMirror-vscrollbar {
+      overflow-x: hidden !important;
+    }
+    .text-runtipi-primary { color: var(--primary-runtipi); }
+    
+    /* Custom Tab Styling */
+    .tab-active {
+        background-color: var(--primary-runtipi);
+        color: white;
+        font-weight: 600;
+        border-color: var(--primary-runtipi);
+    }
+    .tab-inactive {
+        background-color: #f3f4f6; /* gray-100 */
+        color: #4b5563; /* gray-600 */
+        border-color: #e5e7eb; /* gray-200 */
+    }
+    /* Hide Vue elements until fully mounted */
+    [v-cloak] { display: none; }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            'runtipi-primary': '#007bff',
+            'runtipi-secondary': '#28a745',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Vue, JSZip, CodeMirror, YAML Parser -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.7.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script> 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  
+</head>
+<body>
+  <div id="app" class="min-h-screen bg-gray-50 font-sans p-4 sm:p-8" v-cloak>
+    <div class="max-w-4xl mx-auto">
+      <header class="text-center mb-8">
+        <h1 class="text-4xl font-extrabold text-runtipi-primary">Runtipi App Store Blueprint Generator 📦</h1>
+        <p class="text-gray-500 mt-2">Generates the `config.json`, `docker-compose.json`, and folder structure for an App Store entry.</p>
+      </header>
+      
+      <main class="bg-white rounded-xl shadow-2xl">
+        <!-- Tab Navigation -->
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-2 p-4 overflow-x-auto" aria-label="Tabs">
+            <button 
+              @click="currentTab = 'Import'" 
+              :class="{'tab-active': currentTab === 'Import', 'tab-inactive hover:bg-gray-200': currentTab !== 'Import'}" 
+              class="flex-shrink-0 py-2 px-3 text-center border-b-2 font-medium text-sm rounded-t-lg transition"
+            >
+              1. Compose Import
+            </button>
+            <button 
+              @click="currentTab = 'Metadata'" 
+              :disabled="!isDataInitialized"
+              :class="{'tab-active': currentTab === 'Metadata', 'tab-inactive hover:bg-gray-200': currentTab !== 'Metadata'}" 
+              class="flex-shrink-0 py-2 px-3 text-center border-b-2 font-medium text-sm rounded-t-lg transition disabled:opacity-50"
+            >
+              2. Metadata & Inputs
+            </button>
+            <button 
+              @click="currentTab = 'Config'" 
+              :disabled="!isDataInitialized"
+              :class="{'tab-active': currentTab === 'Config', 'tab-inactive hover:bg-gray-200': currentTab !== 'Config'}" 
+              class="flex-shrink-0 py-2 px-3 text-center border-b-2 font-medium text-sm rounded-t-lg transition disabled:opacity-50"
+            >
+              3. config.json 
+              <span v-if="!configValid" class="ml-1 text-red-300 font-bold text-xs">(Invalid)</span>
+            </button>
+            <button 
+              @click="currentTab = 'Compose'" 
+              :disabled="!isDataInitialized"
+              :class="{'tab-active': currentTab === 'Compose', 'tab-inactive hover:bg-gray-200': currentTab !== 'Compose'}" 
+              class="flex-shrink-0 py-2 px-3 text-center border-b-2 font-medium text-sm rounded-t-lg transition disabled:opacity-50"
+            >
+              4. docker-compose.json 
+              <span v-if="!dockerComposeValid" class="ml-1 text-red-300 font-bold text-xs">(Invalid)</span>
+            </button>
+          </nav>
+        </div>
+        
+        <!-- Tab Content -->
+        <div class="p-4 sm:p-6 lg:p-8">
+
+            <!-- 1. Import Tab Content -->
+            <div v-show="currentTab === 'Import'">
+                <h2 class="text-2xl font-semibold mb-6 text-runtipi-primary">1. Import Docker Compose File</h2>
+                <div class="p-6 bg-blue-50 border-2 border-blue-200 rounded-xl shadow-inner">
+                    <h4 class="text-xl font-bold text-blue-800 flex items-center mb-3">
+                        Paste Compose YAML
+                    </h4>
+                    <textarea v-model="rawComposeInput" class="mt-1 block w-full rounded-md border-blue-400 shadow-sm p-3 border font-mono text-sm" rows="10" placeholder="Paste your Docker Compose YAML content here..."></textarea>
+                    <p v-if="parseError" :class="{'text-red-600': parseError.startsWith('Error'), 'text-green-600': parseError.startsWith('Successfully')}" class="text-sm mt-2 italic">{{ parseError }}</p>
+                    <button @click="parseDockerCompose" :disabled="!rawComposeInput.trim()" class="mt-3 w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
+                        Parse & Populate Fields (Go to step 2)
+                    </button>
+                    <p class="text-xs text-blue-700 mt-2 font-semibold">
+                        ⚠️ **IMPORTANT:** If parsing fails, hit **F12** and check the **Console** for the raw error. This will show you the exact line/character causing the YAML syntax issue (e.g., an illegal tab character).
+                    </p>
+                </div>
+            </div>
+
+
+            <!-- 2. Metadata & Inputs Tab Content -->
+            <div v-show="currentTab === 'Metadata'">
+                <h2 class="text-2xl font-semibold mb-6 text-runtipi-primary">2. Core App Metadata and User Inputs</h2>
+                
+                <div v-if="!isDataInitialized" class="p-6 text-center text-gray-500 border border-dashed rounded-lg bg-gray-50">
+                    Please paste a Docker Compose YAML file in Step 1 to populate these fields.
+                </div>
+
+                <form v-else @submit.prevent class="space-y-6">
+                    
+                    <h4 class="text-xl font-bold text-gray-700 mt-6 pb-1 border-b">Core App Store Identification</h4>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex-1">
+                            <label for="serviceId" class="block text-sm font-medium text-gray-700">App ID (lowercase, no spaces, folder name):</label>
+                            <input v-model="serviceId" required @input="updateOutput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="appname">
+                        </div>
+                        <div class="flex-1">
+                            <label for="title" class="block text-sm font-medium text-gray-700">Display Title:</label>
+                            <input v-model="title" required @input="updateOutput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="My Awesome App">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex-1">
+                            <label for="image" class="block text-sm font-medium text-gray-700">Docker Image:</label>
+                            <input v-model="image" required @input="updateOutput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="ghcr.io/developer/image:latest">
+                        </div>
+                        <div class="flex-1">
+                            <label for="mainPort" class="block text-sm font-medium text-gray-700">Main Container Port (The UI port):</label>
+                            <input v-model="mainPort" type="number" required @input="updateOutput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="80">
+                        </div>
+                    </div>
+                    
+                    <label for="description" class="block text-sm font-medium text-gray-700">Short Description:</label>
+                    <textarea v-model="description" @input="updateOutput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" rows="2" placeholder="A short, catchy description of the application."></textarea>
+
+                    <label for="longDescription" class="block text-sm font-medium text-gray-700 mt-4">Long Description (Markdown for metadata/description.md):</label>
+                    <textarea v-model="longDescription" @input="updateOutput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" rows="6" placeholder="Detailed description in Markdown. Supports ## Headers, lists, links, etc. This will be saved to metadata/description.md."></textarea>
+                    
+                    
+                    <!-- NEW: App Store Metadata Fields -->
+                    <h4 class="text-xl font-bold text-gray-700 mt-6 pb-1 border-b">App Store Metadata (<span class="font-mono text-sm">config.json</span>)</h4>
+
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="configVersion" class="block text-sm font-medium text-gray-700">App Version:</label>
+                            <input v-model="configVersion" @input="updateOutput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="1.0.0">
+                        </div>
+                        <div>
+                            <label for="configAuthor" class="block text-sm font-medium text-gray-700">Author:</label>
+                            <input v-model="configAuthor" @input="updateOutput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="Your Name or Team">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="configCategories" class="block text-sm font-medium text-gray-700">Categories (Comma separated):</label>
+                        <input v-model="configCategories" @input="updateOutput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="utilities, media, networking">
+                        <p class="text-xs text-gray-500 mt-1">E.g., <span class="font-mono text-gray-600">utilities, home-automation, media</span>. These become an array in the config file.</p>
+                    </div>
+
+                    <div>
+                        <label for="configWebsite" class="block text-sm font-medium text-gray-700">Website/Source URL (Optional):</label>
+                        <input v-model="configWebsite" @input="updateOutput" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border" placeholder="https://github.com/my-app/repo">
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" v-model="enableTraefik" @change="updateOutput" class="rounded border-gray-300 text-runtipi-primary focus:ring-runtipi-primary">
+                            <span class="ml-2 text-sm font-medium text-gray-700">Enable Traefik Integration (Adds basic labels for reverse proxy)</span>
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1">This adds Traefik labels to docker-compose.json for automatic HTTPS routing in Runtipi. Customize further in the preview if needed.</p>
+                    </div>
+
+
+                    <h4 class="text-xl font-bold text-gray-700 mt-6 pb-1 border-b">Volumes (Data Persistence)</h4>
+                    
+                    <div class="p-4 border rounded-lg bg-green-50">
+                      <div class="flex justify-between items-center mb-3">
+                        <label class="text-base font-semibold text-green-700">Add New Volume Mapping:</label>
+                      </div>
+                      
+                      <!-- New Volume Input Form -->
+                      <div class="flex flex-wrap gap-2 items-end mb-4 p-3 bg-green-100 rounded-lg border border-green-300">
+                          <input v-model="newVolumeKey" placeholder="Key (e.g., logs)" class="flex-1 min-w-[100px] p-1 border rounded text-sm" required>
+                          <span class="text-gray-500 font-bold mr-2 ml-1">:</span> 
+                          <input v-model="newVolumeTarget" placeholder="Container Path (e.g., /app/logs)" class="flex-1 p-1 border rounded text-sm" required>
+                          <!-- STYLED DROPDOWN for new volume assignment -->
+                          <select v-model="newVolumeService" class="p-2 border-2 rounded-lg text-sm min-w-[120px] shadow-md border-blue-400 focus:ring-2 focus:ring-blue-300 transition duration-150 ease-in-out">
+                              <option v-for="service in allServiceNames" :value="service" :key="service">{{ service }}</option>
+                          </select>
+                          <button type="button" @click="addVolume" :disabled="!newVolumeKey || !newVolumeTarget" class="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition disabled:opacity-50">
+                              Add Volume
+                          </button>
+                      </div>
+
+                      <label class="text-base font-semibold text-green-700 block mb-3">Configurable Volumes (Grouped by Service):</label>
+
+                      <!-- Grouped Volumes Display -->
+                      <div v-for="(group, serviceName) in displayGroupedVolumes" :key="'gvol-' + serviceName" class="mb-4">
+                        <div class="p-2 mb-2 bg-green-200 border-l-4 border-green-600 text-green-800 font-semibold text-sm rounded-md">
+                            Service: {{ serviceName }}
+                        </div>
+                        <div v-for="(volume, index) in group" :key="'vol-' + volume.uniqueKey" class="flex flex-wrap gap-2 items-center mb-2 p-2 bg-white rounded shadow-sm border">
+                            <!-- STYLED DROPDOWN for reassignment - ADDED MR-2 HERE -->
+                            <div class="w-24 flex items-center justify-center mr-2"> 
+                                <select v-model="volume.serviceName" @change="updateOutput" class="p-1 border-2 rounded-lg text-xs bg-gray-100 shadow-sm border-blue-400 focus:ring-1 focus:ring-blue-300 transition duration-150 ease-in-out w-full">
+                                    <option v-for="service in allServiceNames" :value="service" :key="'svol-' + service">{{ service }}</option>
+                                </select>
+                            </div>
+
+                            <input v-model="volume.key" placeholder="Key (e.g., config)" class="flex-1 min-w-[100px] p-1 border rounded text-sm" @input="updateOutput" required>
+                            <span class="text-gray-500 font-bold mr-2 ml-1">:</span> 
+                            <input v-model="volume.target" placeholder="Container Path (e.g., /config)" class="flex-1 p-1 border rounded text-sm" @input="updateOutput" required>
+                            <button type="button" @click="removeVolume(volume.uniqueKey)" class="text-red-500 hover:text-red-700 p-1 rounded-full leading-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                      </div>
+                       <p class="text-xs text-green-700 italic mt-4">
+                        **Tip:** Use the small dropdown on the left of each item to easily reassign it to a different service group.
+                      </p>
+                    </div>
+
+                    <h4 class="text-xl font-bold text-gray-700 mt-6 pb-1 border-b">Environment Variables</h4>
+                    
+                    <div class="p-4 border rounded-lg bg-yellow-50">
+                      <div class="flex justify-between items-center mb-3">
+                        <label class="text-base font-semibold text-yellow-700">Add New Environment Variable:</label>
+                      </div>
+                      
+                      <!-- New Environment Input Form -->
+                       <div class="flex flex-wrap gap-2 items-end mb-4 p-3 bg-yellow-100 rounded-lg border border-yellow-300">
+                          <input v-model="newEnvKey" placeholder="Key (e.g., API_KEY)" class="flex-1 min-w-[100px] p-1 border rounded text-sm" required>
+                          <span class="text-gray-500 font-bold mr-2 ml-1">=</span> 
+                          <input v-model="newEnvDefault" placeholder="Default Value (e.g., abc123def)" class="flex-1 p-1 border rounded text-sm">
+                           <!-- STYLED DROPDOWN for new environment assignment -->
+                           <select v-model="newEnvService" class="p-2 border-2 rounded-lg text-sm min-w-[120px] shadow-md border-blue-400 focus:ring-2 focus:ring-blue-300 transition duration-150 ease-in-out">
+                              <option v-for="service in allServiceNames" :value="service" :key="'nsvol-' + service">{{ service }}</option>
+                          </select>
+                          <button type="button" @click="addEnvironment" :disabled="!newEnvKey" class="px-3 py-1 text-sm bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition disabled:opacity-50">
+                              Add Variable
+                          </button>
+                      </div>
+
+                      <label class="text-base font-semibold text-yellow-700 block mb-3">Configurable Variables (Grouped by Service):</label>
+                      
+                      <!-- Grouped Environment Display -->
+                       <div v-for="(group, serviceName) in displayGroupedEnvironment" :key="'genv-' + serviceName" class="mb-4">
+                        <div class="p-2 mb-2 bg-yellow-200 border-l-4 border-yellow-600 text-yellow-800 font-semibold text-sm rounded-md">
+                            Service: {{ serviceName }}
+                        </div>
+                        <div v-for="(env, index) in group" :key="'env-' + env.uniqueKey" class="flex flex-wrap gap-2 items-center mb-2 p-2 bg-white rounded shadow-sm border">
+                            <!-- STYLED DROPDOWN for reassignment - ADDED MR-2 HERE -->
+                            <div class="w-24 flex items-center justify-center mr-2"> 
+                                <select v-model="env.serviceName" @change="updateOutput" class="p-1 border-2 rounded-lg text-xs bg-gray-100 shadow-sm border-blue-400 focus:ring-1 focus:ring-blue-300 transition duration-150 ease-in-out w-full">
+                                    <option v-for="service in allServiceNames" :value="service" :key="'senval-' + service">{{ service }}</option>
+                                </select>
+                            </div>
+                            <input v-model="env.key" placeholder="Key (e.g., PUID)" class="flex-1 p-1 border rounded text-sm" @input="updateOutput" required>
+                            <span class="text-gray-500 font-bold mr-2 ml-1">=</span> 
+                            <input v-model="env.default" placeholder="Default Value (e.g., 1000)" class="flex-1 p-1 border rounded text-sm" @input="updateOutput">
+                            <button type="button" @click="removeEnvironment(env.uniqueKey)" class="text-red-500 hover:text-red-700 p-1 rounded-full leading-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>
+                            </button>
+                        </div>
+                      </div>
+                      <p class="text-xs text-yellow-700 italic mt-4">
+                        **Tip:** Use the small dropdown on the left of each item to easily reassign it to a different service group.
+                      </p>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- 3. Config Tab Content (Editable Preview) -->
+            <div v-show="currentTab === 'Config'">
+                <h2 class="text-2xl font-semibold mb-6 text-runtipi-primary">3. Edit config.json</h2>
+                <h3 v-if="isDataInitialized" class="text-xl font-semibold mb-2 text-gray-700">
+                    {{ cleanServiceId }}/<strong>config.json</strong>
+                </h3>
+                <div v-if="!isDataInitialized" class="p-6 text-center text-gray-500 border border-dashed rounded-lg bg-gray-50">
+                    Content will appear here after a successful import in Step 1.
+                </div>
+                <template v-else>
+                    <span :class="{'text-green-600': configValid, 'text-red-600': !configValid}" class="text-sm font-medium mb-4 block">
+                        Status: {{ configValid ? 'JSON Valid' : 'JSON INVALID! Please fix before downloading.' }}
+                    </span>
+                    <!-- The editor div is now guaranteed to be displayed when data is initialized -->
+                    <div id="config-editor" class="h-[70vh] min-h-[450px] border rounded-lg shadow-inner"></div>
+                    <p class="text-gray-500 text-xs mt-3">
+                        Edit the JSON directly here for advanced changes or to customize **form\_fields** manually.
+                    </p>
+                </template>
+            </div>
+
+            <!-- 4. Docker Compose Tab Content (Editable Preview) -->
+            <div v-show="currentTab === 'Compose'">
+                <h2 class="text-2xl font-semibold mb-6 text-runtipi-primary">4. Edit docker-compose.json</h2>
+                <h3 v-if="isDataInitialized" class="text-xl font-semibold mb-2 text-gray-700">
+                    {{ cleanServiceId }}/<strong>docker-compose.json</strong>
+                </h3>
+                 <div v-if="!isDataInitialized" class="p-6 text-center text-gray-500 border border-dashed rounded-lg bg-gray-50">
+                    Content will appear here after a successful import in Step 1.
+                </div>
+                <template v-else>
+                    <span :class="{'text-green-600': dockerComposeValid, 'text-red-600': !dockerComposeValid}" class="text-sm font-medium mb-4 block">
+                        Status: {{ dockerComposeValid ? 'JSON Valid' : 'JSON INVALID! Please fix before downloading.' }}
+                    </span>
+                    <div id="docker-compose-editor" class="h-[70vh] min-h-[450px] border rounded-lg shadow-inner"></div>
+                    <p class="text-gray-500 text-xs mt-3">
+                        Edit the JSON directly here to add custom Docker properties like networks, labels, or additional ports.
+                    </p>
+                </template>
+            </div>
+
+            <!-- Download Button (Always Visible) -->
+            <div class="mt-10 pt-4 border-t border-gray-200 text-center">
+                <button id="download-btn" @click="downloadZip" :disabled="!isOutputValid" class="px-8 py-3 text-lg bg-runtipi-primary text-white rounded-lg font-bold hover:bg-runtipi-primary/80 transition shadow-xl disabled:opacity-50">
+                    Download Runtipi App Zip ({{ cleanServiceId || 'appname' }}.zip)
+                </button>
+            </div>
+            <p v-if="!isOutputValid" class="text-red-600 text-sm mt-3 text-center font-medium">Error: Please ensure data is imported and fix any invalid JSON in the preview editors before downloading.</p>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        // --- State Control ---
+        currentTab: 'Import', 
+        isDataInitialized: false, // Tracks if a successful import has occurred
+        parseError: '',
+        
+        // --- Editor State ---
+        dockerComposeEditor: null,
+        configEditor: null,
+        dockerComposeValid: true,
+        configValid: true,
+        liveDockerComposeJsonString: '',
+        liveConfigJsonString: '',
+
+        // --- Runtipi App Data (Starts Empty) ---
+        rawComposeInput: '',
+        serviceId: '',
+        title: '',
+        image: '',
+        description: '', // Short description
+        longDescription: '', // Long description for metadata/description.md
+        mainPort: null,
+        
+        // NEW CONFIG.JSON METADATA FIELDS
+        configVersion: '1.0.0',
+        configAuthor: 'Runtipi Community',
+        configCategories: 'utilities', // Comma-separated string input
+        configWebsite: '',
+        enableTraefik: false,
+
+        // Data for new input forms
+        newVolumeKey: '',
+        newVolumeTarget: '',
+        newVolumeService: 'Custom/Manual',
+        newEnvKey: '',
+        newEnvDefault: '',
+        newEnvService: 'Custom/Manual',
+        
+        // List of all services found during parsing
+        parsedServiceKeys: [], 
+
+        // --- Dynamic Fields (Source of Truth - Flat, but tracks serviceName) ---
+        volumes: [], 
+        environment: [],
+        
+        // Simple counter for unique key generation (used for adding/removing items)
+        uniqueKeyCounter: 0
+      },
+      computed: {
+        cleanServiceId() {
+            // Uses regex to only allow lowercase letters, numbers, and hyphens (standard ID format)
+            return (this.serviceId || 'appname').toLowerCase().replace(/[^a-z0-9-]/g, '');
+        },
+        defaultDockerComposeJsonString() {
+            if (!this.isDataInitialized) {
+                return '{\n  "version": "3",\n  "services": {} \n}';
+            }
+            return JSON.stringify(this.generateDockerComposeJson(), null, 2);
+        },
+        defaultConfigJsonString() {
+            if (!this.isDataInitialized) {
+                // Initialize with empty object to ensure CodeMirror is ready for valid JSON
+                return JSON.stringify(this.generateConfigJson(), null, 2);
+            }
+            return JSON.stringify(this.generateConfigJson(), null, 2);
+        },
+        isOutputValid() {
+            // Basic validation check to ensure key fields are present
+            return this.isDataInitialized && this.dockerComposeValid && this.configValid && 
+                   this.cleanServiceId && this.title && this.image && this.mainPort !== null;
+        },
+        
+        allServiceNames() {
+            const serviceSet = new Set(['Custom/Manual', 'System Default']); 
+            
+            // Add all parsed services 
+            this.parsedServiceKeys.forEach(key => serviceSet.add(key));
+            
+            // Add any service names that might have been manually introduced
+            this.volumes.forEach(v => serviceSet.add(v.serviceName));
+            this.environment.forEach(e => serviceSet.add(e.serviceName));
+
+            return Array.from(serviceSet).sort();
+        },
+
+        // Computed property to group volumes for display
+        displayGroupedVolumes() {
+            const grouped = {};
+            this.volumes.forEach(v => {
+                const serviceName = v.serviceName || 'Custom/Manual';
+                if (!grouped[serviceName]) {
+                    grouped[serviceName] = [];
+                }
+                grouped[serviceName].push(v);
+            });
+            return grouped;
+        },
+
+        // Computed property to group environment variables for display
+        displayGroupedEnvironment() {
+            const grouped = {};
+            this.environment.forEach(e => {
+                const serviceName = e.serviceName || 'Custom/Manual';
+                if (!grouped[serviceName]) {
+                    grouped[serviceName] = [];
+                }
+                grouped[serviceName].push(e);
+            });
+            return grouped;
+        }
+      },
+        watch: {
+            isDataInitialized(newVal) {
+                if (newVal) {
+                    this.updateOutput();
+                }
+            },
+            currentTab(newTab) {
+                this.$nextTick(() => {
+                    if (this.isDataInitialized) {
+                        if (newTab === 'Compose') {
+                            if (!this.dockerComposeEditor) {
+                                this.initializeEditors();
+                            }
+                            this.dockerComposeEditor.setValue(this.liveDockerComposeJsonString || this.defaultDockerComposeJsonString);
+                            this.dockerComposeEditor.refresh();
+                            this.validateJson('dockerCompose');
+                        } else if (newTab === 'Config') {
+                            if (!this.configEditor) {
+                                this.initializeEditors();
+                            }
+                            this.configEditor.setValue(this.liveConfigJsonString || this.defaultConfigJsonString);
+                            this.configEditor.refresh();
+                            this.validateJson('config');
+                        }
+                    }
+                });
+            },
+            // When service keys are parsed, initialize the default for new inputs
+            parsedServiceKeys: {
+                handler(newKeys) {
+                    if (newKeys.length > 0) {
+                        this.newVolumeService = newKeys[0];
+                        this.newEnvService = newKeys[0];
+                    }
+                },
+                immediate: true
+            }
+        },
+      methods: {
+        // --- CodeMirror Update Handlers ---
+        updateOutput() {
+            if (!this.isDataInitialized) return;
+
+            // 1. Recalculate and set the live JSON strings
+            this.liveDockerComposeJsonString = this.defaultDockerComposeJsonString;
+            this.liveConfigJsonString = this.defaultConfigJsonString;
+
+            // 2. If the user is currently viewing the output tab (i.e., changing data in Step 2)
+            // ensure the editor updates immediately.
+            if (this.currentTab === 'Compose' && this.dockerComposeEditor) {
+                this.dockerComposeEditor.setValue(this.liveDockerComposeJsonString);
+                this.dockerComposeEditor.refresh();
+                this.validateJson('dockerCompose');
+            }
+            if (this.currentTab === 'Config' && this.configEditor) {
+                this.configEditor.setValue(this.liveConfigJsonString);
+                this.configEditor.refresh();
+                this.validateJson('config');
+            }
+        },
+        onCodeMirrorChange(type) {
+            if (type === 'dockerCompose') {
+                this.liveDockerComposeJsonString = this.dockerComposeEditor.getValue();
+                this.validateJson(type);
+            } else if (type === 'config') {
+                this.liveConfigJsonString = this.configEditor.getValue();
+                this.validateJson(type);
+            }
+        },
+        validateJson(type) {
+            const jsonString = type === 'dockerCompose' ? this.liveDockerComposeJsonString : this.liveConfigJsonString;
+            try {
+                JSON.parse(jsonString);
+                if (type === 'dockerCompose') {
+                    this.dockerComposeValid = true;
+                } else {
+                    this.configValid = true;
+                }
+            } catch (e) {
+                if (type === 'dockerCompose') {
+                    this.dockerComposeValid = false;
+                } else {
+                    this.configValid = false;
+                }
+            }
+        },
+
+
+        // --- Docker Compose Parsing Method (IMPROVED to group by service) ---
+        parseDockerCompose() {
+            this.parseError = '';
+            const rawInput = this.rawComposeInput.trim();
+            if (!rawInput) {
+                this.parseError = "Error: Input field is empty.";
+                this.isDataInitialized = false;
+                return;
+            }
+
+            let composeData;
+            
+            try {
+                composeData = jsyaml.load(rawInput);
+            } catch (yamlError) {
+                this.parseError = "Error: Could not parse input as valid YAML. Check indentation and look in the console (F12) for detailed error information.";
+                console.error("--- YAML Parsing Failed ---", yamlError); 
+                this.isDataInitialized = false;
+                return;
+            }
+
+            if (!composeData || typeof composeData.services !== 'object' || Object.keys(composeData.services).length === 0) {
+                this.parseError = "Error: Parsed content is not a valid Docker Compose file (missing 'services').";
+                this.isDataInitialized = false;
+                return;
+            }
+            
+            // --- Start Extraction ---
+            
+            const serviceKeys = Object.keys(composeData.services);
+            this.parsedServiceKeys = serviceKeys; // Store all keys
+            const primaryServiceName = serviceKeys[0]; // Use the first service for core app identity
+            const primaryService = composeData.services[primaryServiceName];
+
+            // Reset dynamic fields before population
+            this.volumes = [];
+            this.environment = [];
+            this.uniqueKeyCounter = 0; // Reset unique key counter
+
+            // Maps to track uniqueness of keys/targets for the final flat list
+            const uniqueVolumeTargets = new Map(); // target -> { key, serviceName, uniqueKey }
+            const uniqueEnvKeys = new Map(); // key -> { default, serviceName, uniqueKey }
+
+            // --- 1. Core App Identification (from primary service) ---
+            this.serviceId = primaryServiceName;
+            this.title = primaryServiceName.split(/[-_]/).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+            this.description = 'A custom web application container built for Runtipi.';
+            this.configAuthor = 'Runtipi Community'; // Reset author on new import
+            this.configCategories = 'utilities'; // Reset categories on new import
+            this.configWebsite = ''; // Reset website on new import
+
+            this.image = primaryService.image || '';
+            if (!this.image) {
+                 this.parseError = `Error: Primary service '${primaryServiceName}' is missing a required 'image' property.`;
+                 this.isDataInitialized = false;
+                 return;
+            }
+
+
+            // --- 2. Extract Main Port (from primary service) ---
+            let mainPort = 8443;
+            if (primaryService.ports && primaryService.ports.length > 0) {
+                const firstPort = primaryService.ports[0];
+                if (typeof firstPort === 'string') {
+                    const parts = firstPort.split(':');
+                    let containerPort = 8443;
+                    if (parts.length > 1) { 
+                        containerPort = parseInt(parts[parts.length - 1].split('/')[0]) || 8443; // Take last part as container port
+                    } else if (parts.length === 1) { 
+                        containerPort = parseInt(parts[0].split('/')[0]) || 8443;
+                    }
+                    mainPort = containerPort;
+                }
+                this.mainPort = mainPort;
+            } else {
+                this.mainPort = 8443;
+            }
+            
+            // --- 3. Extract ALL Unique Volumes & Environment Variables (from all services) ---
+            const VAR_DEFAULT_REGEX = /\$\{(\s*([A-Za-z0-9_]+)\s*):-(\s*(.*?)\s*)\}$/; // Captures VAR and DEFAULT
+            const VAR_REF_REGEX = /\$\{(\s*([A-Za-z0-9_]+)\s*)\}$/; // Captures VAR
+
+            for (const serviceName in composeData.services) {
+                const service = composeData.services[serviceName];
+
+                // VOLUME EXTRACTION
+                if (service.volumes && Array.isArray(service.volumes)) {
+                    service.volumes.forEach((vol) => {
+                        if (typeof vol === 'string' && vol.includes(':')) {
+                            // Extract container target path: source:/path/in/container:ro,Z -> /path/in/container
+                            const parts = vol.split(':').map(s => s.trim());
+                            let target = parts[parts.length - 1].split(',')[0].trim(); // Target path is the last part before options
+
+                            if (target && target.startsWith('/') && !target.startsWith('/dev') && !uniqueVolumeTargets.has(target)) {
+                                
+                                let key = target.split('/').pop() || 'data';
+                                if (key.includes('.')) { key = 'config'; }
+                                
+                                const baseKey = key.replace(/[^a-z0-9]/gi, '').toLowerCase();
+                                let finalKey = baseKey;
+                                let counter = 1;
+                                
+                                // Ensure the key is unique globally
+                                while (Array.from(uniqueVolumeTargets.values()).some(v => v.key === finalKey)) {
+                                    finalKey = baseKey + counter++;
+                                }
+                                
+                                this.uniqueKeyCounter++;
+
+                                uniqueVolumeTargets.set(target, { 
+                                    key: finalKey, 
+                                    target: target,
+                                    serviceName: serviceName,
+                                    uniqueKey: this.uniqueKeyCounter // Use a counter for reliable Vue keys
+                                });
+                            }
+                        }
+                    });
+                }
+                
+                // ENVIRONMENT VARIABLE EXTRACTION
+                if (service.environment) {
+                    const environmentList = Array.isArray(service.environment)
+                        ? service.environment
+                        : Object.entries(service.environment).map(([k, v]) => `${k}=${v}`);
+
+                    environmentList.forEach(envStr => {
+                        const parts = envStr.split('=');
+                        if (parts.length > 1) {
+                            const varValue = parts.slice(1).join('=').trim();
+                            
+                            let finalKey = '';
+                            let finalDefault = '';
+
+                            let defaultMatch = varValue.match(VAR_DEFAULT_REGEX);
+                            let refMatch = varValue.match(VAR_REF_REGEX);
+                            
+                            if (defaultMatch) {
+                                finalKey = defaultMatch[2].trim(); 
+                                finalDefault = defaultMatch[4].trim(); 
+                            } else if (refMatch) {
+                                finalKey = refMatch[2].trim(); 
+                                finalDefault = '';
+                            } else {
+                                finalKey = parts[0].trim();
+                                finalDefault = varValue;
+                            }
+
+                            if (finalKey) {
+                                if (!uniqueEnvKeys.has(finalKey)) {
+                                    this.uniqueKeyCounter++;
+                                    uniqueEnvKeys.set(finalKey, { 
+                                        key: finalKey, 
+                                        default: finalDefault, 
+                                        serviceName: serviceName,
+                                        uniqueKey: this.uniqueKeyCounter
+                                    });
+                                } else if (finalDefault !== '' && uniqueEnvKeys.get(finalKey).default === '') {
+                                    // If we saw it before with an empty default, but now found a default, update it
+                                    uniqueEnvKeys.get(finalKey).default = finalDefault;
+                                    uniqueEnvKeys.get(finalKey).serviceName = serviceName; // Update source service
+                                }
+                            }
+                        } else {
+                            // Handle environment variable defined as a simple key (e.g., - 'KEY')
+                            const simpleKey = envStr.trim().split('=')[0].trim(); 
+                            if (simpleKey && !uniqueEnvKeys.has(simpleKey)) {
+                                 this.uniqueKeyCounter++;
+                                 uniqueEnvKeys.set(simpleKey, { 
+                                     key: simpleKey, 
+                                     default: '', 
+                                     serviceName: serviceName,
+                                     uniqueKey: this.uniqueKeyCounter
+                                 });
+                            }
+                        }
+                    });
+                }
+            }
+
+
+            // Populate final flat lists for generator logic
+            this.volumes = Array.from(uniqueVolumeTargets.values());
+            this.environment = Array.from(uniqueEnvKeys.values());
+            
+            // Ensure PUID/PGID defaults if not present
+            const hasPuid = this.environment.some(e => e.key.toUpperCase() === 'PUID');
+            const hasPgid = this.environment.some(e => e.key.toUpperCase() === 'PGID');
+            
+            if (!hasPuid) { 
+                this.uniqueKeyCounter++;
+                // Note: Set service to 'System Default' for clarity in the UI
+                this.environment.unshift({ key: 'PUID', default: '1000', serviceName: 'System Default', uniqueKey: this.uniqueKeyCounter }); 
+            }
+            if (!hasPgid) { 
+                this.uniqueKeyCounter++;
+                this.environment.unshift({ key: 'PGID', default: '1000', serviceName: 'System Default', uniqueKey: this.uniqueKeyCounter }); 
+            }
+
+            // Set initialization flag and update outputs
+            this.isDataInitialized = true;
+            this.updateOutput(); // Generates JSON strings and updates *visible* editor if on that tab
+
+            if (this.configEditor) this.configEditor.refresh();
+            if (this.dockerComposeEditor) this.dockerComposeEditor.refresh();
+            
+            this.parseError = `Successfully extracted data for primary service: ${primaryServiceName} and ${this.volumes.length} unique volume(s) and ${this.environment.length} unique environment variable(s) from all services. Going to step 2.`;
+            this.currentTab = 'Metadata'; // Move to step 2 on success
+            setTimeout(() => this.parseError = '', 5000); 
+        },
+        
+        // --- Generator Methods (Generates JSON based on form inputs) ---
+        generateDockerComposeJson() {
+          const serviceName = this.cleanServiceId;
+          
+          // 1. Ports: Uses the fixed placeholder ${MAIN_PORT} in the host position.
+          const ports = [
+            `\${MAIN_PORT}:${this.mainPort}` 
+          ];
+
+          // 2. Volumes: The key from the form is converted to APPDATA_UPPERCASE_KEY and used as the placeholder.
+          const volumes = this.volumes.map(v => {
+            if (!v.key || !v.target) return null;
+            const placeholderKey = `APPDATA_${v.key.toUpperCase()}`; // e.g., APPDATA_CONFIG
+            return `\${${placeholderKey}}:${v.target}`; // Output: ${APPDATA_CONFIG}:/app/config
+          }).filter(v => v !== null);
+
+          // 3. Environment: The key from the form is converted to UPPERCASE_KEY and used as the placeholder value.
+          const env = {};
+          this.environment.forEach(e => {
+            if (e.key) {
+                // The key in docker-compose.json uses the user's casing (e.g., PUID or api_key).
+                // The value MUST be the uppercase Runtipi placeholder.
+                const placeholderValue = `\${${e.key.toUpperCase()}}`; // e.g., ${PUID}
+                env[e.key] = placeholderValue; // Output: "PUID": "${PUID}"
+            }
+          });
+
+          const service = {
+            image: this.image,
+            container_name: serviceName,
+            restart: 'unless-stopped', 
+            ports: ports.length ? ports : undefined, 
+            volumes: volumes.length ? volumes : undefined,
+            environment: Object.keys(env).length ? env : undefined,
+            network_mode: 'bridge',
+          };
+
+          // Optional Traefik labels
+          if (this.enableTraefik) {
+            service.labels = {};
+            service.labels["traefik.enable"] = "true";
+            service.labels["traefik.http.routers." + serviceName + ".rule"] = "Host(`${APP_SUBDOMAIN}.${MAIN_DOMAIN}`)";
+            service.labels["traefik.http.routers." + serviceName + ".entrypoints"] = "websecure";
+            service.labels["traefik.http.routers." + serviceName + ".tls.certresolver"] = "myresolver";
+            service.labels["traefik.http.services." + serviceName + ".loadbalancer.server.port"] = this.mainPort.toString();
+          }
+          
+          return {
+            "version": "3",
+            "services": {
+              [serviceName]: service
+            }
+          };
+        },
+
+        generateConfigJson() {
+            const form_fields = [];
+
+            // 1. Ports (MAIN_PORT) is a required field.
+            form_fields.push({
+                key: "MAIN_PORT", // Runtipi placeholder key (MUST MATCH docker-compose value)
+                label: "Main Port",
+                description: "The host port to access the application UI.",
+                default: "8443",
+                type: "port",
+                optional: false
+            });
+
+            // 2. Volumes: The config key is APPDATA_UPPERCASE_KEY.
+            const volumeInputs = this.volumes
+                .filter(v => v.key && v.target) 
+                .map(v => ({
+                    key: `APPDATA_${v.key.toUpperCase()}`, // Runtipi placeholder key
+                    label: `${v.key} Folder`,
+                    description: `Maps to container path: ${v.target}`,
+                    default: `${this.cleanServiceId}_${v.key}`, 
+                    type: "path",
+                    optional: false
+                }));
+            form_fields.push(...volumeInputs);
+
+            // 3. Environment Variables: The config key is the UPPERCASE key.
+            const envInputs = this.environment
+                .filter(e => e.key)
+                .map(e => {
+                    const key = e.key.toUpperCase();
+                    let label = key.replace(/_/g, ' ');
+                    let description = `Set the value for the ${e.key} environment variable.`;
+
+                    // FIX: Special handling for PUID and PGID for explicit descriptions
+                    if (key === 'PUID') {
+                        label = "User ID (PUID)";
+                        description = "The User ID (UID) the container should run as (default 1000).";
+                    } else if (key === 'PGID') {
+                        label = "Group ID (PGID)";
+                        description = "The Group ID (GID) the container should run as (default 1000).";
+                    }
+                    
+                    return {
+                        key: key, // Runtipi placeholder key (MUST MATCH docker-compose value)
+                        label: label,
+                        description: description,
+                        default: e.default || '',
+                        type: "text",
+                        optional: false
+                    }
+                });
+            form_fields.push(...envInputs);
+
+            // 4. If Traefik enabled, add APP_SUBDOMAIN and MAIN_DOMAIN form_fields
+            if (this.enableTraefik) {
+                form_fields.push({
+                    key: "APP_SUBDOMAIN",
+                    label: "App Subdomain",
+                    description: "Subdomain for Traefik routing (e.g., app). Leave empty for random.",
+                    default: "",
+                    type: "text",
+                    optional: true
+                }, {
+                    key: "MAIN_DOMAIN",
+                    label: "Main Domain",
+                    description: "Your main domain for Traefik (e.g., yourdomain.com).",
+                    default: "",
+                    type: "text",
+                    optional: false
+                });
+            }
+            
+            // 5. Sort form_fields for clean config.json
+            form_fields.sort((a, b) => a.key.localeCompare(b.key));
+
+            // Get current timestamps for required fields
+            const now = new Date().getTime();
+            
+            // 5. Build the object in the required order, using new Vue properties
+            const config = {};
+            config.name = this.title;
+            config.available = true;
+            // FIX: Ensure 'port' is saved as a STRING, which Runtipi's parser often prefers.
+            config.port = String(this.mainPort) || "8443";
+            config.exposable = true;
+            config.dynamic_config = true;
+            config.id = this.cleanServiceId;
+            config.description = this.longDescription || this.description; // Prefer long if provided
+            config.tipi_version = 3;
+            config.version = this.configVersion || "1.0.0"; // Use new input
+            
+            // Split and clean categories from the comma-separated input
+            config.categories = this.configCategories.split(',')
+                .map(c => c.trim())
+                .filter(c => c.length > 0);
+            
+            config.short_desc = this.description.substring(0, 100) || this.title; 
+            config.author = this.configAuthor || "Runtipi Community"; // Use new input
+            config.source = this.configWebsite || ""; // Use new input
+            config.website = this.configWebsite || ""; // Use new input
+            config.form_fields = form_fields; 
+            config.supported_architectures = ["arm64", "amd64"]; 
+            config.created_at = now;
+            config.updated_at = now;
+            
+            return config;
+        },
+
+        // --- Data Management Methods (omitted for brevity, assume correct) ---
+        addVolume() {
+            if (!this.newVolumeKey || !this.newVolumeTarget) return;
+
+            // Simple sanitation to prevent path issues
+            const sanitizedKey = this.newVolumeKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const sanitizedTarget = this.newVolumeTarget.trim();
+
+            this.uniqueKeyCounter++;
+            this.volumes.push({
+                key: sanitizedKey,
+                target: sanitizedTarget,
+                serviceName: this.newVolumeService,
+                uniqueKey: this.uniqueKeyCounter
+            });
+            this.newVolumeKey = '';
+            this.newVolumeTarget = '';
+            this.updateOutput();
+        },
+        removeVolume(uniqueKey) {
+            this.volumes = this.volumes.filter(v => v.uniqueKey !== uniqueKey);
+            this.updateOutput();
+        },
+        addEnvironment() {
+            if (!this.newEnvKey) return;
+            
+            this.uniqueKeyCounter++;
+            this.environment.push({
+                key: this.newEnvKey.toUpperCase().replace(/[^A-Z0-9_]/g, ''),
+                default: this.newEnvDefault.trim(),
+                serviceName: this.newEnvService,
+                uniqueKey: this.uniqueKeyCounter
+            });
+            this.newEnvKey = '';
+            this.newEnvDefault = '';
+            this.updateOutput();
+        },
+        removeEnvironment(uniqueKey) {
+            // Do not allow removal of PUID or PGID
+            const envToRemove = this.environment.find(e => e.uniqueKey === uniqueKey);
+            if (envToRemove && (envToRemove.key === 'PUID' || envToRemove.key === 'PGID')) {
+                console.warn("PUID/PGID are required system variables and cannot be removed.");
+                return;
+            }
+            this.environment = this.environment.filter(e => e.uniqueKey !== uniqueKey);
+            this.updateOutput();
+        },
+        convertPngToJpg(pngBlob) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    canvas.toBlob(resolve, 'image/jpeg', 0.9);
+                };
+                img.src = URL.createObjectURL(pngBlob);
+            });
+        },
+
+
+        // --- Download Method ---
+        async downloadZip() {
+            if (!this.isOutputValid) {
+                // Used custom message box instead of alert as per instructions
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50';
+                errorMsg.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                        <h4 class="text-lg font-bold text-red-600 mb-3">Cannot Download</h4>
+                        <p class="text-gray-700">Please ensure all required fields are filled and the JSON content in Step 3 and 4 is valid before attempting to download.</p>
+                        <button onclick="this.parentNode.parentNode.remove()" class="mt-4 px-4 py-2 bg-runtipi-primary text-white font-semibold rounded-lg hover:bg-runtipi-primary/80 transition">
+                            Close
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(errorMsg);
+                return;
+            }
+
+            const zip = new JSZip();
+            const folderName = this.cleanServiceId;
+
+            // Get the live, potentially edited content from CodeMirror
+            const finalConfigJson = this.liveConfigJsonString;
+            const finalDockerComposeJson = this.liveDockerComposeJsonString;
+
+            // Add files to the ZIP structure: folder/config.json, folder/docker-compose.json
+            zip.file(`${folderName}/config.json`, finalConfigJson);
+            zip.file(`${folderName}/docker-compose.json`, finalDockerComposeJson);
+
+            // Add the original docker-compose.yml
+            zip.file(`${folderName}/docker-compose.yml`, this.rawComposeInput);
+
+            // Always add metadata/description.md with long description or short description
+            const descContent = (this.longDescription && this.longDescription.trim()) ? this.longDescription.trim() : (this.description || 'A custom application.');
+            zip.file(`${folderName}/metadata/description.md`, descContent);
+
+            // Check for icon from Homarr dashboard icons
+            const iconUrl = `https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/${this.cleanServiceId}.png`;
+            try {
+                const response = await fetch(iconUrl);
+                if (response.ok) {
+                    const iconBlob = await response.blob();
+                    const jpgBlob = await this.convertPngToJpg(iconBlob);
+                    zip.file(`${folderName}/metadata/icon.jpg`, jpgBlob);
+                }
+            } catch (e) {
+                // Ignore if icon not found or fetch fails
+            }
+
+            // Generate the ZIP file and trigger download
+            zip.generateAsync({ type: "blob" })
+                .then(function(content) {
+                    saveAs(content, `${folderName}.zip`);
+                })
+                .catch(err => {
+                    console.error("ZIP generation failed:", err);
+                     // Used custom message box instead of alert as per instructions
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50';
+                    errorMsg.innerHTML = `
+                        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                            <h4 class="text-lg font-bold text-red-600 mb-3">ZIP Error</h4>
+                            <p class="text-gray-700">Error creating zip file. Check the browser console (F12) for details.</p>
+                            <button onclick="this.parentNode.parentNode.remove()" class="mt-4 px-4 py-2 bg-runtipi-primary text-white font-semibold rounded-lg hover:bg-runtipi-primary/80 transition">
+                                Close
+                            </button>
+                        </div>
+                    `;
+                    document.body.appendChild(errorMsg);
+                });
+        },
+
+
+        // --- Initialization ---
+        initializeEditors() {
+            // Initialize config editor
+            const configElement = document.getElementById('config-editor');
+            if (configElement && !this.configEditor) {
+                this.configEditor = CodeMirror(configElement, {
+                    mode: "application/json",
+                    lineNumbers: true,
+                    tabSize: 2,
+                    theme: 'default',
+                    value: '{}',
+                });
+                this.configEditor.on('change', () => this.onCodeMirrorChange('config'));
+            }
+
+            // Initialize docker-compose editor
+            const composeElement = document.getElementById('docker-compose-editor');
+            if (composeElement && !this.dockerComposeEditor) {
+                this.dockerComposeEditor = CodeMirror(composeElement, {
+                    mode: "application/json",
+                    lineNumbers: true,
+                    tabSize: 2,
+                    theme: 'default',
+                    value: '{}',
+                });
+                this.dockerComposeEditor.on('change', () => this.onCodeMirrorChange('dockerCompose'));
+            }
+        }
+      },
+      mounted() {
+        this.$nextTick(() => {
+            this.initializeEditors();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
