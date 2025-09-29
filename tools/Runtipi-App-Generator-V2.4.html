@@ -309,11 +309,9 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         <!-- Navigation Bar -->
-        <!-- Removed "relative" class from header to prevent stacking issues, relies on children positioning -->
         <header class="flex justify-between items-center py-6 header-border border-b">
             
             <!-- Logo/Title wrapped in an anchor tag with ID for navigation -->
-            <!-- ADDED: relative class for tooltip positioning -->
             <a href="#" id="logo-link" class="text-2xl font-bold flex items-center transition duration-200 hover:opacity-85 cursor-pointer relative">
                 
                 <!-- START SVG Tipi Logo - Replicating Runtipi Style -->
@@ -340,7 +338,6 @@
             <div class="flex items-center space-x-4">
                 
                 <!-- GitHub Button/Icon Link (Star This Project) -->
-                <!-- ADDED: relative class for tooltip positioning -->
                 <a href="https://github.com/acidgreenservers/runtipi-homelab-appstore/tree/master/Tools" target="_blank" 
                    class="icon-btn-gradient flex items-center text-color-primary font-medium py-2 px-4 rounded-lg header-github-btn relative" 
                    data-tooltip="Star This Project">
@@ -352,7 +349,6 @@
                 </a>
                 
                 <!-- Day/Night Toggle Switch -->
-                 <!-- ADDED: relative class for tooltip positioning -->
                 <button id="theme-toggle" aria-label="Toggle theme" class="p-2 text-xl rounded-full w-10 h-10 flex items-center justify-center relative">
                     <span id="theme-icon">🌙</span>
                     <!-- Tooltip for the toggle -->
@@ -513,19 +509,14 @@
                             <!-- Consolidated Collapsible Content (Default: Hidden) -->
                             <div id="form-fields-content" class="collapse-transition collapse-hidden bg-card-dark p-4 rounded-lg border border-dark mb-4">
                                 
-                                <!-- START Section 1: Form Field Properties (The 13 properties) -->
+                                <!-- START Section 1: Form Field Properties (The 9 remaining optional properties) -->
                                 <div>
-                                    <h4 class="text-lg font-semibold mb-3 text-runtipi-red">Form Field Properties</h4>
-                                    <p class="text-secondary-dark text-sm mb-4">These define the structure and validation of each input field in the Runtipi UI.</p>
+                                    <h4 class="text-lg font-semibold mb-3 text-runtipi-red">Optional Form Field Properties</h4>
+                                    <p class="text-secondary-dark text-sm mb-4">Check these to add optional validation/display properties to your form fields.</p>
                                     
                                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                        <!-- Field Properties Checkboxes (13 items) -->
-                                        <div class="checkbox-container pt-0">
-                                            <input type="checkbox" id="prop_type" class="app-checkbox" data-property-key="type" checked><label for="prop_type" class="ml-3 text-sm font-medium select-none">type</label>
-                                        </div>
-                                        <div class="checkbox-container pt-0">
-                                            <input type="checkbox" id="prop_label" class="app-checkbox" data-property-key="label" checked><label for="prop_label" class="ml-3 text-sm font-medium select-none">label</label>
-                                        </div>
+                                        <!-- Field Properties Checkboxes (9 items) -->
+                                        
                                         <div class="checkbox-container pt-0">
                                             <input type="checkbox" id="prop_hint" class="app-checkbox" data-property-key="hint"><label for="prop_hint" class="ml-3 text-sm font-medium select-none">hint</label>
                                         </div>
@@ -548,12 +539,6 @@
                                             <input type="checkbox" id="prop_max" class="app-checkbox" data-property-key="max"><label for="prop_max" class="ml-3 text-sm font-medium select-none">max</label>
                                         </div>
                                         <div class="checkbox-container pt-0">
-                                            <input type="checkbox" id="prop_required" class="app-checkbox" data-property-key="required"><label for="prop_required" class="ml-3 text-sm font-medium select-none">required</label>
-                                        </div>
-                                        <div class="checkbox-container pt-0">
-                                            <input type="checkbox" id="prop_env_vars" class="app-checkbox" data-property-key="env_variable"><label for="prop_env_vars" class="ml-3 text-sm font-medium select-none">environment variables</label>
-                                        </div>
-                                        <div class="checkbox-container pt-0">
                                             <input type="checkbox" id="prop_options" class="app-checkbox" data-property-key="options"><label for="prop_options" class="ml-3 text-sm font-medium select-none">options</label>
                                         </div>
                                         <div class="checkbox-container pt-0">
@@ -565,13 +550,13 @@
 
                                 <hr class="border-dark my-4">
                                 
-                                <!-- START Section 2: Form Fields (The 9 types) -->
+                                <!-- START Section 2: Form Fields (The 9 types - now display only) -->
                                 <div class="mb-6">
-                                    <h4 class="text-lg font-semibold mb-3 text-runtipi-red">Form Fields (Available Input Types)</h4>
-                                    <p class="text-secondary-dark text-sm mb-4">Select the valid input types available for variables.</p>
+                                    <h4 class="text-lg font-semibold mb-3 text-runtipi-red">No Longer Needed, leaving just in case for now</h4>
+                                    <p class="text-secondary-dark text-sm mb-4">These checkboxes no longer control the available 'Type' options, which are hardcoded in the dropdown.</p>
                                     
                                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                        <!-- Variable Types Checkboxes (9 items) -->
+                                        <!-- Variable Types Checkboxes (9 items - Display Only) -->
                                         <div class="checkbox-container pt-0">
                                             <input type="checkbox" id="type_text" class="app-checkbox" data-form-type="text" checked><label for="type_text" class="ml-3 text-sm font-medium select-none">text</label>
                                         </div>
@@ -638,7 +623,7 @@
                             </div>
 
                             <!-- ARM64 Checkbox -->
-                            <div class="checkbox-container">
+                            <div class="checkbox-checkbox-container">
                                 <input type="checkbox" id="arch_arm64" class="app-checkbox" checked>
                                 <label for="arch_arm64" class="ml-3 text-sm font-medium select-none">arm64</label>
                             </div>
@@ -672,7 +657,7 @@
         <!-- Footer -->
         <footer class="py-10 text-center text-slate-500 text-sm border-t border-dark">
             <p class="mb-4 text-secondary-dark">
-                Built with <span class="text-red-500">❤️</span> & <span class="text-yellow-500">💪</span> XxZIOIMIBIExX®™ and <span class="text-runtipi-blue">🦾</span> Gemini <span class="text-runtipi-blue">🦾</span>
+                Built with <span class="text-red-500">❤️</span> <span class="text-yellow-500">💪</span> XxZIOIMIBIExX®™ and <span class="text-runtipi-blue">🦾</span> Gemini <span class="text-runtipi-blue">🦾</span>
             </p>
         </footer>
     </div>
@@ -691,10 +676,15 @@
         const DEFAULT_APP_PORT = "";
 
         // --- DEFINITIONS FOR DYNAMIC FORM FIELDS ---
+        
+        // These are the properties that REMAIN OPTIONAL (9 properties)
+        const OPTIONAL_PROPERTIES = [
+            "hint", "placeholder", "default", "regex", "pattern_error", "min", "max", "options", "encoding"
+        ];
+        
+        // Property definitions for optional fields
         const PROPERTY_DEFINITIONS = {
             // Key: [InputType, Placeholder, Description, HTML Type Attribute]
-            type:          ['select', 'Select the variable type', 'Input type (e.g., text, password, number)', ''], // Special case: handled by getTypeHtml, always required if prop_type is checked
-            label:         ['text', 'e.g., Database Password', 'User-facing label for the input field', 'text'],
             hint:          ['text', 'e.g., Used for login.', 'Help text displayed below the field', 'text'],
             placeholder:   ['text', 'e.g., Enter your secret here', 'Ghost text inside the input', 'text'],
             default:       ['text', 'e.g., root', 'Pre-filled value', 'text'],
@@ -702,21 +692,18 @@
             pattern_error: ['text', 'e.g., Must be lowercase letters only', 'Error message on regex failure', 'text'],
             min:           ['number', 'e.g., 3', 'Minimum length or value', 'number'],
             max:           ['number', 'e.g., 50', 'Maximum length or value', 'number'],
-            required:      ['checkbox', 'Is this field mandatory?', 'Field must be filled', 'checkbox'],
-            env_variable:  ['text', 'e.g., DB_PASSWORD', 'The environment variable name this field populates', 'text'],
             options:       ['textarea', 'Option 1, Option 2 (comma separated)', 'Available options for dropdowns/radios', ''], // Special: textarea for multiple options
             encoding:      ['text', 'e.g., utf-8', 'Character encoding (rarely used)', 'text']
         };
-        
+
+        // All 9 available input types
         const FORM_TYPES = [
             "text", "password", "email", "number", "fqdn", "ip", 
             "fqdnip", "random", "boolean"
         ];
-        // --- END DEFINITIONS ---
-
-
+        
         let field_id_counter = 0;
-
+        
         // --- THEME LOGIC (kept simple for brevity, assumed functional) ---
         function updateThemeContent(theme) {
             const innerTipiFill = document.querySelector('svg path:nth-child(2)');
@@ -914,9 +901,7 @@
                 // Tipi Version is always 3 for now
                 document.getElementById('config-tipi_version').value = 3; 
 
-                // 2. Do NOT initialize form field creation by default anymore (per request)
-                
-                // 3. Update the JSON output immediately to show imported data
+                // 2. Update the JSON output immediately to show imported data
                 updateConfigJsonOutput();
             }
 
@@ -924,133 +909,112 @@
         }
         
         /**
-         * Generates the HTML for a standard property input (text, number, textarea, checkbox).
-         * @param {string} key - The property key (e.g., 'label', 'min').
-         * @param {number} id - The unique ID of the field set.
-         * @param {string|number|boolean} defaultValue - The default value for the input.
-         * @param {string} inputType - 'text', 'number', 'checkbox', or 'textarea'.
-         * @param {string} placeholder - Placeholder text.
-         * @returns {string} The HTML string for the input.
+         * Generates the HTML for the required form field properties (type, label, required, env_variable).
          */
-        function getPropertyHtml(key, id, defaultValue, inputType, placeholder) {
-            const def = PROPERTY_DEFINITIONS[key];
-            const isSelected = document.getElementById(`prop_${key}`)?.checked || false;
-
-            if (!isSelected) return '';
-
-            // Handle Checkbox
-            if (inputType === 'checkbox') {
-                return `
-                    <div class="mb-3">
-                        <div class="checkbox-container pt-0">
-                            <input type="checkbox" id="field-${id}-${key}" data-field-key="${key}" class="app-checkbox" ${defaultValue ? 'checked' : ''}>
-                            <label for="field-${id}-${key}" class="ml-3 text-xs font-medium text-secondary-dark select-none">${def[2]}</label>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Handle Textarea (for options)
-            if (inputType === 'textarea') {
-                 // For textarea, the default value should be the array joined by comma-space
-                 const value = Array.isArray(defaultValue) ? defaultValue.join(', ') : (defaultValue || '');
-                 
-                 return `
-                    <div class="mb-3 col-span-full">
-                        <label for="field-${id}-${key}" class="block text-xs font-medium text-secondary-dark mb-1">${capitalizeServiceName(key)} (${def[2]})</label>
-                        <textarea id="field-${id}-${key}" data-field-key="${key}" rows="2" class="app-input w-full text-sm resize-none" placeholder="${placeholder}">${value}</textarea>
-                    </div>
-                 `;
-            }
+        function getRequiredFieldsHtml(id, currentValues = {}) {
+            const currentType = currentValues.type || 'text'; // Default to text
+            const currentLabel = currentValues.label || '';
+            const currentRequired = currentValues.required === true; // Default to false
+            const currentEnv = currentValues.env_variable || '';
             
-            // Handle Text/Number
-            return `
-                <div class="mb-3">
-                    <label for="field-${id}-${key}" class="block text-xs font-medium text-secondary-dark mb-1">${capitalizeServiceName(key)}</label>
-                    <input type="${def[3]}" id="field-${id}-${key}" data-field-key="${key}" value="${defaultValue}" class="app-input w-full text-sm" placeholder="${placeholder}">
-                </div>
-            `;
-        }
-
-        /**
-         * Generates the HTML for the 'type' property dropdown (Special Case).
-         * @param {string} currentType - The default selected type.
-         * @param {number} id - The unique ID of the field set.
-         * @returns {string} The HTML string for the type dropdown.
-         */
-        function getTypeHtml(currentType, id) {
-             const isTypeSelected = document.getElementById('prop_type')?.checked || false;
-             if (!isTypeSelected) return '';
-             
-             // Get checked types from the selection box
-            const checkedTypes = Array.from(document.querySelectorAll('.app-checkbox[data-form-type]:checked'))
-                                      .map(cb => cb.dataset.formType);
-
-            // Use only the available/checked types
-            const availableTypes = checkedTypes.length > 0 ? checkedTypes : FORM_TYPES;
-
-            let optionsHtml = availableTypes.map(type => 
+            // Generate type dropdown options from the FORM_TYPES array
+            const optionsHtml = FORM_TYPES.map(type => 
                 `<option value="${type}" ${type === currentType ? 'selected' : ''}>${type}</option>`
             ).join('');
-
+            
             return `
+                <!-- REQUIRED CHECKBOX: Required -->
+                <div class="mb-3 col-span-full border-b border-dark/50 pb-3">
+                    <div class="checkbox-container pt-0">
+                        <input type="checkbox" id="field-${id}-required" data-field-key="required" class="app-checkbox" ${currentRequired ? 'checked' : ''}>
+                        <label for="field-${id}-required" class="ml-3 text-sm font-medium text-runtipi-red select-none">
+                            Required <span class="text-secondary-dark font-normal ml-2"> (Is this form field required to show in the UI when installing the app?)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- REQUIRED INPUT: Type -->
                 <div class="mb-3">
                     <label for="field-${id}-type" class="block text-xs font-medium text-secondary-dark mb-1">Type <span class="text-runtipi-red">*</span></label>
                     <select id="field-${id}-type" data-field-key="type" class="app-select w-full text-sm">
                         ${optionsHtml}
                     </select>
                 </div>
+
+                <!-- REQUIRED INPUT: Label -->
+                <div class="mb-3">
+                    <label for="field-${id}-label" class="block text-xs font-medium text-secondary-dark mb-1">Label <span class="text-runtipi-red">*</span></label>
+                    <input type="text" id="field-${id}-label" data-field-key="label" value="${currentLabel}" class="app-input w-full text-sm" placeholder="e.g., Database Password">
+                </div>
+                
+                <!-- REQUIRED INPUT: Environment Variable -->
+                <div class="mb-3 col-span-full">
+                    <label for="field-${id}-env_variable" class="block text-xs font-medium text-secondary-dark mb-1">Environment Variable <span class="text-runtipi-red">*</span></label>
+                    <input type="text" id="field-${id}-env_variable" data-field-key="env_variable" value="${currentEnv}" class="app-input w-full text-sm" placeholder="e.g., DB_PASSWORD">
+                </div>
             `;
         }
 
-
         /**
          * Renders the dynamic properties inside the form field card based on selected checkboxes.
+         * NOW ONLY HANDLES OPTIONAL PROPERTIES (9 fields).
          * @param {number} id - The unique ID of the field set.
          * @param {Object} currentValues - Object containing current values for the fields.
          */
         function renderDynamicProperties(id, currentValues = {}) {
-            const container = document.getElementById(`field-props-container-${id}`);
+            const container = document.getElementById(`field-optional-container-${id}`);
             if (!container) return;
 
-            // Gather the current name for the title before re-rendering
-            const currentLabel = currentValues.label || document.getElementById(`field-${id}-label`)?.value || `Field #${id}`;
-            const currentType = currentValues.type || document.getElementById(`field-${id}-type`)?.value || 'text';
-
-            // Build the new HTML block
             let newHtml = '';
             
-            // Add 'type' (if selected)
-            newHtml += getTypeHtml(currentType, id);
+            // Add all OPTIONAL properties dynamically
+            OPTIONAL_PROPERTIES.forEach(key => {
+                const def = PROPERTY_DEFINITIONS[key];
+                const isSelected = document.getElementById(`prop_${key}`)?.checked || false;
 
-            // Add all other properties dynamically
-            Object.keys(PROPERTY_DEFINITIONS).forEach(key => {
-                if (key !== 'type') { // 'type' is handled separately as a select dropdown
-                    const def = PROPERTY_DEFINITIONS[key];
-                    const defaultValue = currentValues[key] !== undefined ? currentValues[key] : (def[3] === 'checkbox' ? false : '');
-                    
-                    newHtml += getPropertyHtml(key, id, defaultValue, def[0], def[1]);
+                if (!isSelected) return; // Skip if the optional property is not checked globally
+
+                const defaultValue = currentValues[key] !== undefined ? currentValues[key] : (def[3] === 'checkbox' ? false : '');
+
+                // Handle Checkbox (Future proofing for any optional boolean)
+                if (def[0] === 'checkbox') { 
+                    newHtml += `
+                        <div class="mb-3">
+                            <div class="checkbox-container pt-0">
+                                <input type="checkbox" id="field-${id}-${key}" data-field-key="${key}" class="app-checkbox" ${defaultValue ? 'checked' : ''}>
+                                <label for="field-${id}-${key}" class="ml-3 text-xs font-medium text-secondary-dark select-none">${def[2]}</label>
+                            </div>
+                        </div>
+                    `;
+                } 
+                // Handle Textarea (for options)
+                else if (def[0] === 'textarea') {
+                    const value = Array.isArray(defaultValue) ? defaultValue.join(', ') : (defaultValue || '');
+                    newHtml += `
+                        <div class="mb-3 col-span-full">
+                            <label for="field-${id}-${key}" class="block text-xs font-medium text-secondary-dark mb-1">${capitalizeServiceName(key)} (${def[2]})</label>
+                            <textarea id="field-${id}-${key}" data-field-key="${key}" rows="2" class="app-input w-full text-sm resize-none" placeholder="${def[1]}">${value}</textarea>
+                        </div>
+                    `;
+                }
+                // Handle Text/Number (Standard input)
+                else {
+                    newHtml += `
+                        <div class="mb-3">
+                            <label for="field-${id}-${key}" class="block text-xs font-medium text-secondary-dark mb-1">${capitalizeServiceName(key)}</label>
+                            <input type="${def[3]}" id="field-${id}-${key}" data-field-key="${key}" value="${defaultValue}" class="app-input w-full text-sm" placeholder="${def[1]}">
+                        </div>
+                    `;
                 }
             });
             
             // Update the container content
             container.innerHTML = newHtml;
 
-            // Re-attach listeners for the new elements
+            // Re-attach listeners for the new optional elements
             container.querySelectorAll('[data-field-key]').forEach(input => {
-                // All fields should trigger the JSON update
                 input.addEventListener(input.type === 'checkbox' ? 'change' : 'input', updateConfigJsonOutput);
-                
-                // Special listener for 'label' to update the card title
-                if (input.dataset.fieldKey === 'label') {
-                     input.addEventListener('input', (e) => {
-                        document.getElementById(`field-${id}-title`).textContent = e.target.value || `Field #${id}`;
-                    });
-                }
             });
-
-            // Ensure card title is correctly set after re-render
-            document.getElementById(`field-${id}-title`).textContent = currentLabel || `Field #${id}`;
         }
         
         /**
@@ -1074,19 +1038,40 @@
                         </button>
                     </div>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2" id="field-props-container-${id}">
-                        <!-- Dynamic properties (type, label, etc.) will be rendered here -->
+                    <div id="field-required-container-${id}" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 pb-4 mb-4 border-b border-dark/50">
+                        <!-- Required properties will be rendered here -->
+                    </div>
+                    
+                    <div id="field-optional-container-${id}" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                        <!-- Optional properties will be rendered here -->
                     </div>
                 </div>
             `;
             
             entryContainer.insertAdjacentHTML('beforeend', cardHtml);
+
+            // 1. Render Required Fields
+            const requiredContainer = document.getElementById(`field-required-container-${id}`);
+            requiredContainer.innerHTML = getRequiredFieldsHtml(id, initialValues);
             
-            // Render properties after the card is in the DOM
+            // 2. Render Optional (Dynamic) Fields
             renderDynamicProperties(id, initialValues);
             
-            showMessage('success', `New Form Field #${id} added.`);
+            // 3. Attach listeners to the newly created REQUIRED fields
+            requiredContainer.querySelectorAll('[data-field-key]').forEach(input => {
+                const key = input.dataset.fieldKey;
+                // All required fields trigger JSON update
+                input.addEventListener(input.type === 'checkbox' || input.tagName === 'SELECT' ? 'change' : 'input', updateConfigJsonOutput);
+                
+                // Special listener for 'label' to update the card title
+                if (key === 'label') {
+                     input.addEventListener('input', (e) => {
+                        document.getElementById(`field-${id}-title`).textContent = e.target.value || `Field #${id}`;
+                    });
+                }
+            });
 
+            showMessage('success', `New Form Field #${id} added.`);
             updateConfigJsonOutput();
         }
 
@@ -1106,59 +1091,103 @@
         /**
          * Reads the current dynamic form fields and returns them as a structured array.
          * Only includes properties that have a set value (non-empty string, valid number, or required: true).
+         * * MODIFIED: Enforces a specific order for the output properties.
          * @returns {Array<Object>} Array of form field objects based on user input.
          */
         function readDynamicFormFields() {
             const fields = [];
+            // Define the preferred order of keys in the output JSON for clarity
+            const PREFERRED_ORDER = ["type", "label", "max", "min", "required", "env_variable"];
+
             document.querySelectorAll('#form-field-entries .form-field-card').forEach(card => {
                 const fieldObject = {};
+                const id = card.dataset.fieldId;
                 
-                // Read all inputs with the data-field-key attribute within this card
-                card.querySelectorAll('[data-field-key]').forEach(input => {
-                    const key = input.dataset.fieldKey;
-                    let value;
-                    let shouldInclude = false;
+                // 1. Read REQUIRED fields
+                const requiredContainer = card.querySelector(`#field-required-container-${id}`);
+                if (requiredContainer) {
+                    requiredContainer.querySelectorAll('[data-field-key]').forEach(input => {
+                        const key = input.dataset.fieldKey;
+                        
+                        if (key === 'required') {
+                            fieldObject[key] = input.checked;
+                        } else if (input.type === 'text' || input.tagName === 'SELECT') {
+                            fieldObject[key] = input.value.trim();
+                        }
+                    });
+                }
+                
+                // 2. Read OPTIONAL fields
+                const optionalContainer = card.querySelector(`#field-optional-container-${id}`);
+                if (optionalContainer) {
+                     optionalContainer.querySelectorAll('[data-field-key]').forEach(input => {
+                        const key = input.dataset.fieldKey;
+                        let value;
+                        let shouldInclude = false;
 
-                    if (key === 'required') {
-                        value = input.checked;
-                        // Only include 'required: true' explicitly. Omit 'required: false' to save space.
-                        shouldInclude = value === true; 
-                    } else if (key === 'type') {
-                        value = input.value.trim();
-                        // Type is the minimum requirement for a valid field
-                        shouldInclude = value !== ''; 
-                    } else if (input.type === 'number') {
-                        value = parseFloat(input.value);
-                        shouldInclude = !isNaN(value); // Include if valid number
-                    } else if (key === 'options') {
-                        // Options must be converted to an array of strings
-                        const rawValue = input.value || '';
-                        const optionsArray = rawValue.split(',').map(s => s.trim()).filter(s => s.length > 0);
-                        value = optionsArray;
-                        shouldInclude = optionsArray.length > 0;
-                    } else if (input.type === 'textarea' || input.tagName === 'TEXTAREA') {
-                        value = input.value.trim();
-                        shouldInclude = value !== ''; // Include if non-empty string
-                    } else { // Standard text input, select
-                        value = input.value.trim();
-                        shouldInclude = value !== ''; // Include if non-empty string
-                    }
+                        if (input.type === 'number') {
+                            value = parseFloat(input.value);
+                            // Include if it's a valid number
+                            shouldInclude = !isNaN(value); 
+                        } else if (key === 'options') {
+                            const rawValue = input.value || '';
+                            const optionsArray = rawValue.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                            value = optionsArray;
+                            shouldInclude = optionsArray.length > 0;
+                        } else if (input.type === 'textarea' || input.tagName === 'TEXTAREA') {
+                            value = input.value.trim();
+                            shouldInclude = value !== ''; 
+                        } else if (input.type === 'text' || input.tagName === 'SELECT' || input.type === 'checkbox') { 
+                             // Catch any other optional text/select/checkbox
+                            value = input.type === 'checkbox' ? input.checked : input.value.trim();
+                            shouldInclude = input.type === 'checkbox' ? value : value !== ''; 
+                        } 
+                        
+                        if (shouldInclude) {
+                            fieldObject[key] = value;
+                        }
+                    });
+                }
+
+                // 3. Final cleanup and ordering
+                
+                // Omit 'required: false' entirely from the final object
+                if (fieldObject.required === false) {
+                     delete fieldObject.required;
+                }
+
+                // Only proceed if required fields for *Tipi* are present
+                if (fieldObject.type && fieldObject.label && fieldObject.env_variable) {
+                    const orderedField = {};
                     
-                    if (shouldInclude) {
-                        fieldObject[key] = value;
-                    }
-                });
+                    // a) Add fields in the PREFERRED_ORDER
+                    PREFERRED_ORDER.forEach(key => {
+                        if (fieldObject.hasOwnProperty(key)) {
+                            // Transfer property to the ordered object
+                            orderedField[key] = fieldObject[key];
+                            // Remove from the source object so it's not added again later
+                            delete fieldObject[key]; 
+                        }
+                    });
 
-                // Only add the field if it has a 'type' property set
-                if (fieldObject.type) {
-                    fields.push(fieldObject);
+                    // b) Add remaining properties (The rest of the optional fields)
+                    // Iterate over remaining properties in fieldObject (which are now only the non-preferred optional ones)
+                    Object.keys(fieldObject).forEach(key => {
+                        orderedField[key] = fieldObject[key];
+                    });
+
+                    // Push the newly ordered object
+                    fields.push(orderedField);
+                } else {
+                    // Skip invalid fields silently but warn in console
+                    console.warn(`Form Field ${id} skipped: Missing required fields (type, label, or env_variable).`);
                 }
             });
             return fields;
         }
 
 
-        // --- Step 2: Config.json Logic (Updated to use dynamic fields) ---
+        // --- Step 2: Config.json Logic ---
 
         /**
          * Collects data from the form and generates the config.json object.
@@ -1275,20 +1304,21 @@
 
         /**
          * Sets up the necessary event listeners for form field property changes.
+         * Only handles the 9 OPTIONAL properties now.
          */
         function setupFormFieldPropertyListeners() {
-            // Get all property checkboxes (data-property-key)
-            const propertyCheckboxes = document.querySelectorAll('.app-checkbox[data-property-key], .app-checkbox[data-form-type]');
+            // 1. Get OPTIONAL property checkboxes (The 9 remaining properties)
+            const optionalPropertyCheckboxes = document.querySelectorAll('.app-checkbox[data-property-key]');
             
-            propertyCheckboxes.forEach(checkbox => {
+            optionalPropertyCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', () => {
-                    // When a property or type is toggled, re-render the content of ALL existing form field cards
+                    // When an optional property is toggled, re-render the OPTIONAL content of ALL existing form field cards
                     document.querySelectorAll('#form-field-entries .form-field-card').forEach(card => {
                         const id = parseInt(card.dataset.fieldId, 10);
                         
                         // To re-render, we must pass the current state of the fields back in.
                         const currentFieldValues = {};
-                        card.querySelectorAll('[data-field-key]').forEach(input => {
+                        card.querySelector(`#field-optional-container-${id}`).querySelectorAll('[data-field-key]').forEach(input => {
                             const key = input.dataset.fieldKey;
                             if (input.type === 'checkbox') {
                                 currentFieldValues[key] = input.checked;
@@ -1297,12 +1327,15 @@
                             }
                         });
                         
-                        renderDynamicProperties(id, currentFieldValues);
+                        // This call now only renders the OPTIONAL section
+                        renderDynamicProperties(id, currentFieldValues); 
                     });
                     // Also trigger output update
                     updateConfigJsonOutput();
                 });
             });
+
+            // 2. The 9 available type checkboxes (data-form-type) are now display-only and require no functional listeners.
         }
 
         // --- INITIALIZATION ---
@@ -1339,7 +1372,11 @@
             // Form Field Editor Setup
             toggleFormFieldsBtn.addEventListener('click', toggleFormFieldsContent);
             // Button now adds a completely blank new field
-            newFormFieldBtn.addEventListener('click', () => addNewFormField({ type: 'text', label: `New Field ${field_id_counter + 1}` })); 
+            newFormFieldBtn.addEventListener('click', () => addNewFormField({ 
+                type: 'text', 
+                label: `New Field ${field_id_counter + 1}`,
+                env_variable: `ENV_VAR_${field_id_counter + 1}`
+            })); 
             
             // Real-time Input Listeners for Step 2 Form (Metadata fields)
             const configForm = document.getElementById('config-json-form');
@@ -1348,7 +1385,7 @@
                 configForm.addEventListener('change', updateConfigJsonOutput); 
             }
 
-            // Setup listeners for property checkboxes
+            // Setup listeners for optional property checkboxes
             setupFormFieldPropertyListeners();
             
             // --- Default State ---
