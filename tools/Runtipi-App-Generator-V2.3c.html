@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runtipi App Generator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Inter font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Load Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Load Lucide Icons for checkmarks and X in new checkboxes -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Load YAML and JSZip Libraries for Generator functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <style>
+        /* --- Base Theme (DARK) --- */
+        :root {
+            /* General */
+            --bg-body: #131313;
+            --bg-container: #181818;
+            --bg-card: #1F1F1F;
+            --bg-input: #2D2D2D; /* New: for textareas/inputs */
+            --color-text-primary: #E2E8F0;
+            --color-text-secondary: #94A3B8;
+            --color-border: #2D2D2D;
+            --color-black-fill: #94A3B8;
+            /* Accents */
+            --color-runtipi-red: #FF66A3;
+            --color-runtipi-blue: #6495ED;
+            /* CTA */
+            --color-cta: #1F1F1F; /* Adjusted to blend better with cards, but keep dark for contrast */
+            --color-cta-hover: #000000;
+            --color-cta-border: #555555;
+            --color-header-icon: #E2E8F0;
+            /* Alert/Status */
+            --color-error: #F87171;
+            --color-success: #34D399;
+        }
+
+        /* --- Light Theme Overrides --- */
+        html[data-theme='light'] {
+            /* General */
+            --bg-body: #F7F7F7;
+            --bg-container: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --bg-input: #E5E7EB; /* New: light grey input background */
+            --color-text-primary: #1F2937;
+            --color-text-secondary: #6B7280;
+            --color-border: #E5E7EB;
+            --color-black-fill: #000000;
+            /* CTA */
+            --color-cta: #1F1F2F; /* Darker CTA in light mode */
+            --color-cta-hover: #000000;
+            --color-cta-border: #131313;
+            --color-header-icon: #1F2937;
+        }
+
+        /* Apply variables */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--color-text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        html[data-theme='light'] h1, 
+        html[data-theme='light'] h2 {
+            text-shadow: 1px 1px 2px rgba(31, 41, 55, 0.2);
+        }
+
+        .header-border { border-color: var(--color-border); }
+        .hero-title-shadow {
+            text-shadow: 0 0 10px rgba(255, 102, 163, 0.1), 0 0 10px rgba(100, 149, 237, 0.1);
+        }
+        
+        .text-gradient {
+            color: var(--color-runtipi-red);
+            background-image: linear-gradient(to right, var(--color-runtipi-red), var(--color-runtipi-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-fill-color: transparent;
+        }
+
+        /* Apply colors using Tailwind utility classes dynamically */
+        .bg-container-dark { background-color: var(--bg-container); }
+        .bg-card-dark { background-color: var(--bg-card); }
+        .border-dark { border-color: var(--color-border); }
+        .text-secondary-dark { color: var(--color-text-secondary); }
+        .text-runtipi-red { color: var(--color-runtipi-red); }
+        .text-runtipi-blue { color: var(--color-runtipi-blue); }
+        .icon-color { color: var(--color-header-icon); }
+        .bg-input-dark { background-color: var(--bg-input); }
+
+        /* --- TOOLTIP FIX (The main fix for the header overlap) --- */
+        .tooltip {
+            /* Initially hide the tooltip text */
+            position: absolute; /* Allows positioning relative to parent */
+            top: 100%; /* Position below the element */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--bg-card);
+            color: var(--color-text-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem; /* text-xs */
+            white-space: nowrap;
+            opacity: 0; /* Hidden */
+            pointer-events: none; /* Do not interfere with clicks */
+            transition: opacity 0.2s, top 0.2s;
+            z-index: 10;
+            border: 1px solid var(--color-border);
+        }
+        
+        /* Show tooltip on hover over the container element */
+        .relative:hover > .tooltip,
+        .header-github-btn:hover .tooltip,
+        #theme-toggle:hover .tooltip {
+            opacity: 1;
+            top: 150%; /* Adjust position to show nicely below */
+        }
+        
+        /* Ensure logo link and theme toggle have relative positioning */
+        #logo-link, #theme-toggle, .header-github-btn {
+            position: relative;
+        }
+        /* End Tooltip Fix */
+
+
+        /* General Input Style */
+        .app-input {
+            background-color: var(--bg-input); 
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .app-input:focus {
+            outline: none;
+            border-color: var(--color-runtipi-red);
+            box-shadow: 0 0 0 1px var(--color-runtipi-red);
+        }
+        
+        /* Select Dropdown Style */
+        .app-select {
+            background-color: var(--bg-input);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            width: 100%;
+            transition: border-color 0.2s;
+            /* Appearance fix for dark background in Chrome/Firefox */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%2394A3B8' d='M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5rem;
+        }
+
+        .app-select:focus {
+            outline: none;
+            border-color: var(--color-runtipi-red);
+            box-shadow: 0 0 0 1px var(--color-runtipi-red);
+        }
+        
+        /* Checkbox Container Style */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            height: 100%; /* Important for alignment in the grid */
+            padding-top: 0.5rem;
+        }
+
+        /* Standard Checkboxes */
+        .app-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 0.25rem;
+            background-color: var(--bg-input);
+            border: 1px solid var(--color-border);
+            cursor: pointer;
+            appearance: none;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        
+        /* Custom checkmark appearance */
+        .app-checkbox:checked {
+            background-color: var(--color-runtipi-red); 
+            border-color: var(--color-runtipi-red);
+            /* SVG Checkmark: White color, slightly bold stroke */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-width='2.5' d='M6 10l3 3 6-6'/%3E%3C/svg%3E");
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        .app-checkbox:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(100, 149, 237, 0.5); /* Blue glow on focus */
+        }
+        
+        /* CTA Button - Reusable Class */
+        .btn-cta {
+            background-color: var(--color-cta); 
+            border: 1px solid var(--color-cta-border);
+            color: #FFFFFF; 
+            transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .btn-cta:hover {
+            background-color: var(--color-cta-hover);
+            border-color: var(--color-runtipi-red);
+            transform: scale(1.02);
+        }
+        .btn-cta:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            border-color: var(--color-cta-border);
+        }
+
+        /* Secondary/Back Button Style */
+        .btn-secondary {
+            background-color: var(--bg-card);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--bg-container);
+            border-color: var(--color-runtipi-red);
+            transform: scale(1.02);
+        }
+
+        /* Secondary/Back Button Style (LIGHT MODE OVERRIDE) - FORCED DARK APPEARANCE */
+        html[data-theme='light'] .btn-secondary {
+            background-color: var(--color-cta);
+            border-color: var(--color-cta-border);
+            color: #FFFFFF; 
+        }
+
+        /* Secondary/Back Button Hover (LIGHT MODE OVERRIDE) */
+        html[data-theme='light'] .btn-secondary:hover {
+            background-color: var(--color-cta-hover);
+            border-color: var(--color-runtipi-red);
+        }
+
+        /* Message box styles */
+        .message-box {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-weight: 500;
+            color: white;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+            display: none;
+        }
+        .message-box.error { background-color: var(--color-error); }
+        .message-box.success { background-color: var(--color-success); }
+        .message-box.show { opacity: 1; display: block; }
+        
+        /* Custom Transition Utility for collapsible content */
+        .collapse-transition {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            overflow: hidden;
+            opacity: 1;
+            min-height: 0; 
+        }
+        .collapse-hidden {
+            max-height: 0 !important; 
+            opacity: 0;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+
+        /* Custom Styles for Form Field Cards */
+        .form-field-card {
+            background-color: var(--bg-container);
+            border: 1px solid var(--color-border);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+            position: relative;
+        }
+
+        .form-field-card:hover {
+            border-color: var(--color-runtipi-blue);
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased">
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Navigation Bar -->
+        <!-- Removed "relative" class from header to prevent stacking issues, relies on children positioning -->
+        <header class="flex justify-between items-center py-6 header-border border-b">
+            
+            <!-- Logo/Title wrapped in an anchor tag with ID for navigation -->
+            <!-- ADDED: relative class for tooltip positioning -->
+            <a href="#" id="logo-link" class="text-2xl font-bold flex items-center transition duration-200 hover:opacity-85 cursor-pointer relative">
+                
+                <!-- START SVG Tipi Logo - Replicating Runtipi Style -->
+                <svg width="28" height="28" viewBox="0 0 30 30" fill="none" class="mr-3" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Base Structure (Dark Gray/Reddish base color) -->
+                    <path d="M15 4L27 26H3L15 4Z" fill="#F4511E"/>
+                    <!-- Dark Inner Shadow/Opening - This inner color MUST change for light theme -->
+                    <path d="M15 7L24 24H6L15 7Z" fill="var(--bg-body)"/>
+                    <path d="M15 4L27 26" stroke="#FF66A3" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M3 26L15 4" stroke="#FF66A3" stroke-width="2" stroke-linecap="round"/>
+                    <!-- Horizontal Stripes (Yellowish-Pink) -->
+                    <line x1="10" y1="12" x2="20" y2="12" stroke="#FFD180" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="8" y1="18" x2="22" y2="18" stroke="#FFD180" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="6" y1="24" x2="24" y2="24" stroke="#FFD180" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <!-- END SVG Tipi Logo -->
+                
+                TipiGenerator
+                <!-- Tooltip for the logo link -->
+                <span class="tooltip">Return to Home</span>
+            </a>
+            
+            <!-- Right-aligned Icons and Toggle -->
+            <div class="flex items-center space-x-4">
+                
+                <!-- GitHub Button/Icon Link (Star This Project) -->
+                <!-- ADDED: relative class for tooltip positioning -->
+                <a href="https://github.com/acidgreenservers/runtipi-homelab-appstore/tree/master/Tools" target="_blank" 
+                   class="icon-btn-gradient flex items-center text-color-primary font-medium py-2 px-4 rounded-lg header-github-btn relative" 
+                   data-tooltip="Star This Project">
+                    <i class="fas fa-star text-yellow-400 mr-2"></i>
+                    Star This Project
+                    <i class="fab fa-github ml-2"></i> 
+                    <!-- Tooltip for the button itself -->
+                    <span class="tooltip">Star This Project on GitHub</span>
+                </a>
+                
+                <!-- Day/Night Toggle Switch -->
+                 <!-- ADDED: relative class for tooltip positioning -->
+                <button id="theme-toggle" aria-label="Toggle theme" class="p-2 text-xl rounded-full w-10 h-10 flex items-center justify-center relative">
+                    <span id="theme-icon">🌙</span>
+                    <!-- Tooltip for the toggle -->
+                    <span class="tooltip" id="theme-tooltip">Toggle Light/Dark Mode</span>
+                </button>
+            </div>
+        </header>
+
+
+        <!-- HOME VIEW (Default landing page) -->
+        <div id="home-view" class="">
+             <main class="text-center pt-24 pb-28">
+                
+                <h1 class="text-6xl sm:text-7xl font-extrabold tracking-tight mb-6 max-w-4xl mx-auto hero-title-shadow" style="line-height: 1.2;">
+                    <span class="text-gradient block">Runtipi</span>
+                    <span class="block">App Generator</span>
+                </h1>
+                
+                <p class="text-xl text-secondary-dark mb-10 max-w-3xl mx-auto">
+                    The Runtipi App Generator allows you to create and package custom, ready-to-go applications for immediate deployment to your personal AppStore. Simply input a standard `docker-compose.yaml` file, customize the application parameters, and download a complete zip archive ready to be added to your Runtipi AppStore.
+                </p>
+                
+                <div class="flex justify-center mt-8">
+                    <button id="generate-app-btn-home" class="btn-cta text-lg font-semibold py-4 px-12 rounded-lg w-full max-w-sm">
+                        Make An App
+                    </button>
+                </div>
+            </main>
+        </div>
+        <!-- END HOME VIEW -->
+
+        <!-- MULTI-STEP GENERATOR CONTAINER -->
+        <div id="multi-step-generator-container" class="hidden pt-12 pb-28 max-w-4xl mx-auto">
+            
+            <!-- Global Message Box for Feedback -->
+            <div id="message-box" class="message-box"></div>
+
+            <!-- STEP 1: YAML INPUT -->
+            <div id="generator-step-1" class="step-view hidden">
+                <h2 class="text-4xl font-extrabold text-center mb-4">
+                    <span class="text-gradient">Step 1: Input YAML</span>
+                </h2>
+                
+                <!-- Error Message Container -->
+                <div id="yaml-error-message-container" class="mx-auto w-full max-w-xl hidden py-4">
+                    <p id="yaml-error-message" class="text-center font-medium text-white p-2 rounded-lg" 
+                       style="background-color: var(--color-error); width: 100%;">
+                        Invalid YAML Input. Please check your formatting.
+                    </p>
+                </div>
+
+                <div class="bg-card-dark p-6 rounded-xl border-dark border mt-0">
+                    <h3 class="text-xl font-semibold mb-4">Paste Your Docker Compose YAML</h3>
+                    <textarea id="yaml-input" rows="15" class="w-full bg-input-dark p-3 rounded-lg border border-dark text-sm focus:ring-runtipi-red focus:border-runtipi-red resize-none" placeholder="Paste your standard docker-compose.yaml here..."></textarea>
+                </div>
+
+                <!-- Step 1 Button -->
+                <div class="flex justify-center mt-8">
+                    <button id="input-yaml-btn" class="btn-cta text-lg font-semibold py-4 px-12 rounded-lg w-full max-w-sm">
+                        <i class="fas fa-arrow-right mr-2"></i> Input YAML
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: CONFIG.JSON -->
+            <div id="generator-step-2" class="step-view hidden">
+                 <h2 class="text-4xl font-extrabold text-center mb-10">
+                    <span class="text-gradient">Step 2: Config.json Configuration</span>
+                </h2>
+                <h3 class="text-xl font-semibold text-center text-secondary-dark mb-8">
+                    Fill in the metadata fields for the Runtipi **config.json** file.
+                </h3>
+
+                <div class="bg-card-dark p-6 rounded-xl border-dark border">
+                    
+                    <!-- Input Form -->
+                    <h3 class="text-xl font-semibold mb-4 text-runtipi-red">Application Metadata</h3>
+                    
+                    <div id="config-json-form" class="grid grid-cols-1 gap-x-6 gap-y-4 mb-8">
+                        
+                        <!-- 1. name -->
+                        <label class="block text-sm font-medium">Name <span class="text-runtipi-red">*</span></label>
+                        <input type="text" id="config-name" class="app-input" value="" placeholder="e.g., Nginx">
+
+                        <!-- 2. available -->
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="config-available" class="app-checkbox" checked>
+                            <label for="config-available" class="ml-3 text-sm font-medium">Available (App is visible in store)</label>
+                        </div>
+
+                        <!-- 3. port -->
+                        <label class="block text-sm font-medium">Port</label>
+                        <input type="number" id="config-port" class="app-input" value="" placeholder="e.g., 8754">
+                        
+                        <!-- 4. exposable -->
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="config-exposable" class="app-checkbox" checked>
+                            <label for="config-exposable" class="ml-3 text-sm font-medium">Exposable (Allow user access)</label>
+                        </div>
+
+                        <!-- 5. dynamic_config -->
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="config-dynamic_config" class="app-checkbox" checked>
+                            <label for="config-dynamic_config" class="ml-3 text-sm font-medium">Dynamic Config (Use Runtipi host settings)</label>
+                        </div>
+
+                        <!-- 6. id -->
+                        <label class="block text-sm font-medium">ID (URL Safe) <span class="text-runtipi-red">*</span></label>
+                        <input type="text" id="config-id" class="app-input" value="" placeholder="e.g., nginx">
+                        
+                        <!-- 7. description (Textarea for long content) -->
+                        <label class="block text-sm font-medium mt-2">Description (Long)</label>
+                        <textarea id="config-description" rows="3" class="app-input resize-none" placeholder="A detailed description of the app."></textarea>
+
+                        <!-- 8. tipi_version -->
+                        <label class="block text-sm font-medium">Tipi Version <span class="text-runtipi-red">*</span></label>
+                        <input type="number" id="config-tipi_version" class="app-input" value="3" placeholder="e.g., 3">
+                        
+                        <!-- 9. version -->
+                        <label class="block text-sm font-medium">Version <span class="text-runtipi-red">*</span></label>
+                        <input type="text" id="config-version" class="app-input" value="" placeholder="e.g., 1.25.3">
+
+                        <!-- 10. categories -->
+                        <label class="block text-sm font-medium">Categories (Comma-separated)</label>
+                        <input type="text" id="config-categories" class="app-input" value="" placeholder="e.g., utilities, media, database">
+
+                        <!-- 11. short_desc -->
+                        <label class="block text-sm font-medium">Short Description</label>
+                        <input type="text" id="config-short_desc" class="app-input" value="" placeholder="e.g., Open-source simple and fast web server.">
+
+                        <!-- 12. author -->
+                        <label class="block text-sm font-medium">Author</label>
+                        <input type="text" id="config-author" class="app-input" value="" placeholder="e.g., nginx">
+
+                        <!-- 13. source -->
+                        <label class="block text-sm font-medium">Source (GitHub URL)</label>
+                        <input type="url" id="config-source" class="app-input" value="" placeholder="e.g., https://github.com/my/app">
+
+                        <!-- 14. website -->
+                        <label type="url" class="block text-sm font-medium">Website (Official Site URL)</label>
+                        <input type="text" id="config-website" class="app-input" value="" placeholder="e.g., https://www.nginx.com/">
+                        
+                        <!-- 15. form_fields (Interactive Builder) -->
+                        <div class="mb-4">
+                            <!-- Descriptive Text -->
+                            <p class="text-secondary-dark text-sm mb-3">
+                                **Form Fields:** For adding new forms to the web UI when installing new apps, like a username, or a password.
+                            </p>
+
+                            <!-- Consolidated Collapsible Toggle: Checkbox selection section -->
+                            <button id="toggle-form-fields" class="w-full flex justify-between items-center py-3 px-4 bg-input-dark rounded-lg border border-dark transition hover:border-runtipi-red/50 focus:outline-none focus:ring-1 focus:ring-runtipi-red/80 mt-2 mb-4">
+                                <label class="text-sm font-medium cursor-pointer">
+                                    Form Field Properties & Types
+                                </label>
+                                <i id="form-fields-icon" class="fas fa-chevron-right text-secondary-dark text-xs transition-transform duration-300"></i>
+                            </button>
+                            
+                            <!-- Consolidated Collapsible Content (Default: Hidden) -->
+                            <div id="form-fields-content" class="collapse-transition collapse-hidden bg-card-dark p-4 rounded-lg border border-dark mb-4">
+                                
+                                <!-- START Section 1: Form Field Properties (The 13 properties) -->
+                                <div>
+                                    <h4 class="text-lg font-semibold mb-3 text-runtipi-red">Form Field Properties</h4>
+                                    <p class="text-secondary-dark text-sm mb-4">These define the structure and validation of each input field in the Runtipi UI.</p>
+                                    
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        <!-- Field Properties Checkboxes (13 items) -->
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_type" class="app-checkbox" data-property-key="type" checked><label for="prop_type" class="ml-3 text-sm font-medium select-none">type</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_label" class="app-checkbox" data-property-key="label" checked><label for="prop_label" class="ml-3 text-sm font-medium select-none">label</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_hint" class="app-checkbox" data-property-key="hint"><label for="prop_hint" class="ml-3 text-sm font-medium select-none">hint</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_placeholder" class="app-checkbox" data-property-key="placeholder"><label for="prop_placeholder" class="ml-3 text-sm font-medium select-none">placeholder</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_default" class="app-checkbox" data-property-key="default"><label for="prop_default" class="ml-3 text-sm font-medium select-none">default</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_regex" class="app-checkbox" data-property-key="regex"><label for="prop_regex" class="ml-3 text-sm font-medium select-none">regex</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_pattern_error" class="app-checkbox" data-property-key="pattern_error"><label for="prop_pattern_error" class="ml-3 text-sm font-medium select-none">pattern error</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_min" class="app-checkbox" data-property-key="min"><label for="prop_min" class="ml-3 text-sm font-medium select-none">min</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_max" class="app-checkbox" data-property-key="max"><label for="prop_max" class="ml-3 text-sm font-medium select-none">max</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_required" class="app-checkbox" data-property-key="required"><label for="prop_required" class="ml-3 text-sm font-medium select-none">required</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_env_vars" class="app-checkbox" data-property-key="env_variable"><label for="prop_env_vars" class="ml-3 text-sm font-medium select-none">environment variables</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_options" class="app-checkbox" data-property-key="options"><label for="prop_options" class="ml-3 text-sm font-medium select-none">options</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_encoding" class="app-checkbox" data-property-key="encoding"><label for="prop_encoding" class="ml-3 text-sm font-medium select-none">encoding</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- END Section 1: Form Field Properties -->
+
+                                <hr class="border-dark my-4">
+                                
+                                <!-- START Section 2: Form Fields (The 9 types) -->
+                                <div class="mb-6">
+                                    <h4 class="text-lg font-semibold mb-3 text-runtipi-red">Form Fields (Available Input Types)</h4>
+                                    <p class="text-secondary-dark text-sm mb-4">Select the valid input types available for variables.</p>
+                                    
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        <!-- Variable Types Checkboxes (9 items) -->
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_text" class="app-checkbox" data-form-type="text" checked><label for="type_text" class="ml-3 text-sm font-medium select-none">text</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_password" class="app-checkbox" data-form-type="password" checked><label for="type_password" class="ml-3 text-sm font-medium select-none">password</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_email" class="app-checkbox" data-form-type="email"><label for="type_email" class="ml-3 text-sm font-medium select-none">email</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_number" class="app-checkbox" data-form-type="number"><label for="type_number" class="ml-3 text-sm font-medium select-none">number</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_fqdn" class="app-checkbox" data-form-type="fqdn"><label for="type_fqdn" class="ml-3 text-sm font-medium select-none">fqdn</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_ip" class="app-checkbox" data-form-type="ip"><label for="type_ip" class="ml-3 text-sm font-medium select-none">ip</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_fqdnip" class="app-checkbox" data-form-type="fqdnip"><label for="type_fqdnip" class="ml-3 text-sm font-medium select-none">fqdnip</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_random" class="app-checkbox" data-form-type="random"><label for="type_random" class="ml-3 text-sm font-medium select-none">random</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_boolean" class="app-checkbox" data-form-type="boolean"><label for="type_boolean" class="ml-3 text-sm font-medium select-none">boolean</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- END Section 2: Form Fields -->
+
+                            </div>
+                            <!-- END Consolidated Collapsible Content -->
+                        </div>
+                        
+                        <!-- NEW SECTION: Dynamic Form Field Inputs -->
+                        <div class="mt-4">
+                            <h3 class="text-xl font-semibold mb-4 text-runtipi-red">Custom Form Fields</h3>
+                            
+                            <!-- NEW BUTTON: New Form Field (Moved here, above the dynamic cards) -->
+                            <div class="flex justify-between items-center mb-4 border-b border-dark pb-3">
+                                <p class="text-secondary-dark text-sm">Create and configure form fields below based on the selected properties.</p>
+                                <button id="new-form-field-btn" class="btn-secondary text-sm font-semibold py-2 px-4 rounded-lg hover:border-runtipi-blue ml-4">
+                                    <i class="fas fa-plus mr-1"></i> New Form Field
+                                </button>
+                            </div>
+
+                            <!-- Container where dynamic form field cards will be added -->
+                            <div id="form-field-entries" class="space-y-4">
+                                <!-- Dynamic Field Cards will go here -->
+                            </div>
+                        </div>
+                        <!-- END Dynamic Form Field Inputs -->
+
+                        <!-- 16. supported_architectures -->
+                        <div class="block text-sm font-medium mb-2 mt-4">Supported Architectures <span class="text-runtipi-red">*</span></div>
+                        
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-8">
+                            
+                            <!-- AMD64 Checkbox -->
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="arch_amd64" class="app-checkbox" checked>
+                                <label for="arch_amd64" class="ml-3 text-sm font-medium select-none">amd64</label>
+                            </div>
+
+                            <!-- ARM64 Checkbox -->
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="arch_arm64" class="app-checkbox" checked>
+                                <label for="arch_arm64" class="ml-3 text-sm font-medium select-none">arm64</label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Output Display -->
+                    <h3 class="text-xl font-semibold mb-4 text-runtipi-blue mt-8">Generated config.json (Output)</h3>
+                    <p class="text-secondary-dark text-sm mb-2">`created_at` and `updated_at` are automatically set as Unix timestamps.</p>
+                    <textarea id="json-output" rows="20" readonly class="w-full bg-input-dark p-3 rounded-lg border border-dark text-sm resize-none cursor-default font-mono"></textarea>
+                </div>
+                    
+                <!-- NAVIGATION BUTTONS -->
+                <div class="flex justify-between space-x-4 mt-8">
+                    <!-- Secondary Button (Go Back) -->
+                    <button id="goto-yaml-btn" class="btn-secondary text-lg font-semibold py-4 px-12 rounded-lg w-1/2">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to YAML
+                    </button>
+                    <!-- Primary Button (Next Step) -->
+                    <button id="compose-json-btn" class="btn-cta text-lg font-semibold py-4 px-12 rounded-lg w-1/2">
+                        <i class="fas fa-file-code mr-2"></i> Proceed to Compose.json
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+        <!-- END MULTI-STEP GENERATOR CONTAINER -->
+
+
+        <!-- Footer -->
+        <footer class="py-10 text-center text-slate-500 text-sm border-t border-dark">
+            <p class="mb-4 text-secondary-dark">
+                Built with <span class="text-red-500">❤️</span> & <span class="text-yellow-500">💪</span> XxZIOIMIBIExX®™ and <span class="text-runtipi-blue">🦾</span> Gemini <span class="text-runtipi-blue">🦾</span>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        const htmlElement = document.documentElement;
+        let appData = {
+            // Default placeholder values for testing/initial state
+            appName: "",
+            appId: "",
+            appPort: "",
+            yamlContent: "",
+            config: null 
+        }; 
+
+        const DEFAULT_APP_PORT = "";
+
+        // --- DEFINITIONS FOR DYNAMIC FORM FIELDS ---
+        const PROPERTY_DEFINITIONS = {
+            // Key: [InputType, Placeholder, Description, HTML Type Attribute]
+            type:          ['select', 'Select the variable type', 'Input type (e.g., text, password, number)', ''], // Special case: handled by getTypeHtml, always required if prop_type is checked
+            label:         ['text', 'e.g., Database Password', 'User-facing label for the input field', 'text'],
+            hint:          ['text', 'e.g., Used for login.', 'Help text displayed below the field', 'text'],
+            placeholder:   ['text', 'e.g., Enter your secret here', 'Ghost text inside the input', 'text'],
+            default:       ['text', 'e.g., root', 'Pre-filled value', 'text'],
+            regex:         ['text', 'e.g., ^[a-z0-9]+$', 'Regex pattern for validation', 'text'],
+            pattern_error: ['text', 'e.g., Must be lowercase letters only', 'Error message on regex failure', 'text'],
+            min:           ['number', 'e.g., 3', 'Minimum length or value', 'number'],
+            max:           ['number', 'e.g., 50', 'Maximum length or value', 'number'],
+            required:      ['checkbox', 'Is this field mandatory?', 'Field must be filled', 'checkbox'],
+            env_variable:  ['text', 'e.g., DB_PASSWORD', 'The environment variable name this field populates', 'text'],
+            options:       ['textarea', 'Option 1, Option 2 (comma separated)', 'Available options for dropdowns/radios', ''], // Special: textarea for multiple options
+            encoding:      ['text', 'e.g., utf-8', 'Character encoding (rarely used)', 'text']
+        };
+        
+        const FORM_TYPES = [
+            "text", "password", "email", "number", "fqdn", "ip", 
+            "fqdnip", "random", "boolean"
+        ];
+        // --- END DEFINITIONS ---
+
+
+        let field_id_counter = 0;
+
+        // --- THEME LOGIC (kept simple for brevity, assumed functional) ---
+        function updateThemeContent(theme) {
+            const innerTipiFill = document.querySelector('svg path:nth-child(2)');
+            if (innerTipiFill) {
+                // Adjust the inner fill color of the Tipi logo based on the body background
+                const bgColor = getComputedStyle(document.body).getPropertyValue('background-color');
+                innerTipiFill.setAttribute('fill', bgColor);
+            }
+        }
+        function applyThemeVisuals(theme) {
+            const icon = document.getElementById('theme-icon');
+            const tooltip = document.getElementById('theme-tooltip');
+            if (icon) icon.textContent = theme === 'dark' ? '🌙' : '☀️';
+            if (tooltip) tooltip.textContent = theme === 'dark' ? 'Toggle Light Mode' : 'Toggle Dark Mode';
+            updateThemeContent(theme);
+        }
+        function toggleTheme() {
+            const currentTheme = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            htmlElement.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            applyThemeVisuals(currentTheme);
+        }
+        
+        // --- VIEW & MESSAGE LOGIC ---
+        function showView(viewId) { 
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('multi-step-generator-container').classList.add('hidden');
+            document.querySelectorAll('.step-view').forEach(el => el.classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function showMessage(type, message) { 
+            const box = document.getElementById('message-box');
+            box.textContent = message;
+            box.className = `message-box show ${type}`;
+            box.style.display = 'block';
+            setTimeout(() => {
+                box.classList.remove('show');
+                setTimeout(() => box.style.display = 'none', 300); 
+            }, 5000);
+        }
+        
+        // --- COLLAPSIBLE LOGIC ---
+        function toggleCollapsible(content, icon) {
+            const isHidden = content.classList.contains('collapse-hidden');
+            if (isHidden) {
+                content.classList.remove('collapse-hidden');
+                // Set max height immediately to its scroll height for smooth transition
+                content.style.maxHeight = content.scrollHeight + "px"; 
+                
+                icon.classList.replace('fa-chevron-right', 'fa-chevron-down');
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px"; 
+                setTimeout(() => {
+                    content.style.maxHeight = "0"; 
+                    setTimeout(() => content.classList.add('collapse-hidden'), 300);
+                }, 10);
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-right');
+            }
+        }
+        function toggleFormFieldsContent() {
+            const content = document.getElementById('form-fields-content');
+            const icon = document.getElementById('form-fields-icon');
+            toggleCollapsible(content, icon);
+        }
+
+
+        // --- UTILITY FUNCTIONS FOR YAML PROCESSING AND NAMING ---
+
+        /**
+         * Cleans a string to be URL/ID safe (lowercase, hyphenated).
+         */
+        function formatServiceName(name) {
+            if (!name) return '';
+            // Lowercase, remove non-alphanumeric characters (except spaces and hyphens), 
+            // trim, replace spaces/underscores/multiple hyphens with a single hyphen
+            return name.toLowerCase()
+                       .replace(/[^a-z0-9\s-]/g, "")
+                       .trim()
+                       .replace(/[\s_-]+/g, '-');
+        }
+
+        /**
+         * Capitalizes a service name for the App Name field.
+         */
+        function capitalizeServiceName(name) {
+            if (!name) return '';
+            // Replace hyphens or underscores with spaces for splitting, then capitalize each word
+            return name.replace(/[-_]/g, ' ')
+                       .split(' ')
+                       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                       .join(' ');
+        }
+        
+        /**
+         * Attempts to parse YAML and extract core application metadata.
+         */
+        function handleYamlInput() {
+            const yamlText = document.getElementById('yaml-input').value.trim();
+            const errorMessageContainer = document.getElementById('yaml-error-message-container');
+            errorMessageContainer.classList.add('hidden'); // Reset error message
+
+            if (!yamlText) {
+                showMessage('error', 'Input field is empty. Please paste your YAML content.');
+                return;
+            }
+
+            // Reset data for the new attempt
+            appData.yamlContent = yamlText;
+            appData.appName = "";
+            appData.appId = "";
+            appData.appPort = ""; 
+
+            try {
+                const doc = jsyaml.load(yamlText);
+
+                if (!doc || typeof doc !== 'object' || !doc.services) {
+                     throw new Error('YAML does not contain a "services" block, or is not a valid docker-compose structure.');
+                }
+
+                const serviceNames = Object.keys(doc.services);
+                if (serviceNames.length === 0) {
+                     throw new Error('YAML "services" block is empty.');
+                }
+                
+                // Use the first service definition
+                const mainServiceName = serviceNames[0];
+                const mainService = doc.services[mainServiceName];
+                
+                // 1. Set Name (Capitalized) and ID (Hyphenated, Lowercase)
+                appData.appName = capitalizeServiceName(mainServiceName);
+                appData.appId = formatServiceName(mainServiceName);
+                
+                // 2. Find the first exposed public port (e.g., 8080 from 8080:80)
+                let foundPort = "";
+                if (mainService.ports && Array.isArray(mainService.ports) && mainService.ports.length > 0) {
+                    // Find the first port entry that looks like PUBLIC:PRIVATE or just PUBLIC
+                    const portEntry = mainService.ports.find(p => typeof p === 'string' || typeof p === 'number');
+                    if (portEntry) {
+                         const portMapping = String(portEntry).split(':');
+                         // Use the public port (the first part, e.g., '8080:80' -> '8080' or '80' -> '80')
+                         foundPort = parseInt(portMapping[0], 10);
+                    }
+                }
+                
+                appData.appPort = foundPort || ""; // Use the found port or keep it blank
+
+                // If successful, move to the next step
+                goToStep(2);
+
+            } catch (e) {
+                console.error("YAML Parsing Error:", e);
+                let errorMsg = 'Invalid YAML format detected. Please check your syntax.';
+                if (e.message) {
+                    // Use a more specific message if available
+                    errorMsg = e.message.includes("does not contain") || e.message.includes("empty") 
+                                 ? e.message
+                                 : e.message;
+                }
+                         
+                showMessage('error', errorMsg);
+                document.getElementById('yaml-error-message').textContent = errorMsg;
+                errorMessageContainer.classList.remove('hidden');
+            }
+        }
+
+        // --- STEP 2: DYNAMIC FORM FIELD LOGIC ---
+
+        /**
+         * Switches between the generator steps and handles auto-filling.
+         * @param {number} stepNumber - 1 or 2.
+         */
+        function goToStep(stepNumber) {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('multi-step-generator-container').classList.remove('hidden');
+            
+            document.querySelectorAll('.step-view').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`generator-step-${stepNumber}`).classList.remove('hidden');
+            
+            if (stepNumber === 2) {
+                // 1. Auto-fill logic based on YAML data (only Name, ID, Port)
+                document.getElementById('config-name').value = appData.appName || "";
+                document.getElementById('config-id').value = appData.appId || "";
+                document.getElementById('config-port').value = appData.appPort || "";
+                
+                // Keep other fields blank/default
+                document.getElementById('config-description').value = "";
+                document.getElementById('config-version').value = "";
+                document.getElementById('config-categories').value = "";
+                document.getElementById('config-short_desc').value = "";
+                document.getElementById('config-author').value = "";
+                document.getElementById('config-source').value = "";
+                document.getElementById('config-website').value = "";
+
+                // Tipi Version is always 3 for now
+                document.getElementById('config-tipi_version').value = 3; 
+
+                // 2. Do NOT initialize form field creation by default anymore (per request)
+                
+                // 3. Update the JSON output immediately to show imported data
+                updateConfigJsonOutput();
+            }
+
+            window.scrollTo(0, 0); 
+        }
+        
+        /**
+         * Generates the HTML for a standard property input (text, number, textarea, checkbox).
+         * @param {string} key - The property key (e.g., 'label', 'min').
+         * @param {number} id - The unique ID of the field set.
+         * @param {string|number|boolean} defaultValue - The default value for the input.
+         * @param {string} inputType - 'text', 'number', 'checkbox', or 'textarea'.
+         * @param {string} placeholder - Placeholder text.
+         * @returns {string} The HTML string for the input.
+         */
+        function getPropertyHtml(key, id, defaultValue, inputType, placeholder) {
+            const def = PROPERTY_DEFINITIONS[key];
+            const isSelected = document.getElementById(`prop_${key}`)?.checked || false;
+
+            if (!isSelected) return '';
+
+            // Handle Checkbox
+            if (inputType === 'checkbox') {
+                return `
+                    <div class="mb-3">
+                        <div class="checkbox-container pt-0">
+                            <input type="checkbox" id="field-${id}-${key}" data-field-key="${key}" class="app-checkbox" ${defaultValue ? 'checked' : ''}>
+                            <label for="field-${id}-${key}" class="ml-3 text-xs font-medium text-secondary-dark select-none">${def[2]}</label>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Handle Textarea (for options)
+            if (inputType === 'textarea') {
+                 // For textarea, the default value should be the array joined by comma-space
+                 const value = Array.isArray(defaultValue) ? defaultValue.join(', ') : (defaultValue || '');
+                 
+                 return `
+                    <div class="mb-3 col-span-full">
+                        <label for="field-${id}-${key}" class="block text-xs font-medium text-secondary-dark mb-1">${capitalizeServiceName(key)} (${def[2]})</label>
+                        <textarea id="field-${id}-${key}" data-field-key="${key}" rows="2" class="app-input w-full text-sm resize-none" placeholder="${placeholder}">${value}</textarea>
+                    </div>
+                 `;
+            }
+            
+            // Handle Text/Number
+            return `
+                <div class="mb-3">
+                    <label for="field-${id}-${key}" class="block text-xs font-medium text-secondary-dark mb-1">${capitalizeServiceName(key)}</label>
+                    <input type="${def[3]}" id="field-${id}-${key}" data-field-key="${key}" value="${defaultValue}" class="app-input w-full text-sm" placeholder="${placeholder}">
+                </div>
+            `;
+        }
+
+        /**
+         * Generates the HTML for the 'type' property dropdown (Special Case).
+         * @param {string} currentType - The default selected type.
+         * @param {number} id - The unique ID of the field set.
+         * @returns {string} The HTML string for the type dropdown.
+         */
+        function getTypeHtml(currentType, id) {
+             const isTypeSelected = document.getElementById('prop_type')?.checked || false;
+             if (!isTypeSelected) return '';
+             
+             // Get checked types from the selection box
+            const checkedTypes = Array.from(document.querySelectorAll('.app-checkbox[data-form-type]:checked'))
+                                      .map(cb => cb.dataset.formType);
+
+            // Use only the available/checked types
+            const availableTypes = checkedTypes.length > 0 ? checkedTypes : FORM_TYPES;
+
+            let optionsHtml = availableTypes.map(type => 
+                `<option value="${type}" ${type === currentType ? 'selected' : ''}>${type}</option>`
+            ).join('');
+
+            return `
+                <div class="mb-3">
+                    <label for="field-${id}-type" class="block text-xs font-medium text-secondary-dark mb-1">Type <span class="text-runtipi-red">*</span></label>
+                    <select id="field-${id}-type" data-field-key="type" class="app-select w-full text-sm">
+                        ${optionsHtml}
+                    </select>
+                </div>
+            `;
+        }
+
+
+        /**
+         * Renders the dynamic properties inside the form field card based on selected checkboxes.
+         * @param {number} id - The unique ID of the field set.
+         * @param {Object} currentValues - Object containing current values for the fields.
+         */
+        function renderDynamicProperties(id, currentValues = {}) {
+            const container = document.getElementById(`field-props-container-${id}`);
+            if (!container) return;
+
+            // Gather the current name for the title before re-rendering
+            const currentLabel = currentValues.label || document.getElementById(`field-${id}-label`)?.value || `Field #${id}`;
+            const currentType = currentValues.type || document.getElementById(`field-${id}-type`)?.value || 'text';
+
+            // Build the new HTML block
+            let newHtml = '';
+            
+            // Add 'type' (if selected)
+            newHtml += getTypeHtml(currentType, id);
+
+            // Add all other properties dynamically
+            Object.keys(PROPERTY_DEFINITIONS).forEach(key => {
+                if (key !== 'type') { // 'type' is handled separately as a select dropdown
+                    const def = PROPERTY_DEFINITIONS[key];
+                    const defaultValue = currentValues[key] !== undefined ? currentValues[key] : (def[3] === 'checkbox' ? false : '');
+                    
+                    newHtml += getPropertyHtml(key, id, defaultValue, def[0], def[1]);
+                }
+            });
+            
+            // Update the container content
+            container.innerHTML = newHtml;
+
+            // Re-attach listeners for the new elements
+            container.querySelectorAll('[data-field-key]').forEach(input => {
+                // All fields should trigger the JSON update
+                input.addEventListener(input.type === 'checkbox' ? 'change' : 'input', updateConfigJsonOutput);
+                
+                // Special listener for 'label' to update the card title
+                if (input.dataset.fieldKey === 'label') {
+                     input.addEventListener('input', (e) => {
+                        document.getElementById(`field-${id}-title`).textContent = e.target.value || `Field #${id}`;
+                    });
+                }
+            });
+
+            // Ensure card title is correctly set after re-render
+            document.getElementById(`field-${id}-title`).textContent = currentLabel || `Field #${id}`;
+        }
+        
+        /**
+         * Generates and inserts a new dynamic form field configuration card.
+         * @param {Object} initialValues - Optional object to pre-fill the field values.
+         */
+        function addNewFormField(initialValues = {}) {
+            field_id_counter++;
+            const id = field_id_counter;
+            const entryContainer = document.getElementById('form-field-entries');
+
+            const initialLabel = initialValues.label || `Field #${id}`;
+            
+            // Build the card HTML shell
+            const cardHtml = `
+                <div class="form-field-card" data-field-id="${id}">
+                    <div class="flex justify-between items-center mb-2 pb-2 border-b border-dark/50">
+                        <h5 class="text-sm font-bold text-runtipi-blue">Form Field #${id} - <span id="field-${id}-title">${initialLabel}</span></h5>
+                        <button onclick="removeFormField(${id})" class="text-red-500 hover:text-red-400 transition" aria-label="Remove Field ${id}">
+                            <i class="fas fa-trash-alt text-base"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2" id="field-props-container-${id}">
+                        <!-- Dynamic properties (type, label, etc.) will be rendered here -->
+                    </div>
+                </div>
+            `;
+            
+            entryContainer.insertAdjacentHTML('beforeend', cardHtml);
+            
+            // Render properties after the card is in the DOM
+            renderDynamicProperties(id, initialValues);
+            
+            showMessage('success', `New Form Field #${id} added.`);
+
+            updateConfigJsonOutput();
+        }
+
+        /**
+         * Removes a form field configuration card from the DOM and updates the output.
+         * @param {number} id - The unique ID of the field to remove.
+         */
+        function removeFormField(id) {
+            const card = document.querySelector(`.form-field-card[data-field-id="${id}"]`);
+            if (card) {
+                card.remove();
+                showMessage('success', `Form Field #${id} removed.`);
+                updateConfigJsonOutput();
+            }
+        }
+        
+        /**
+         * Reads the current dynamic form fields and returns them as a structured array.
+         * Only includes properties that have a set value (non-empty string, valid number, or required: true).
+         * @returns {Array<Object>} Array of form field objects based on user input.
+         */
+        function readDynamicFormFields() {
+            const fields = [];
+            document.querySelectorAll('#form-field-entries .form-field-card').forEach(card => {
+                const fieldObject = {};
+                
+                // Read all inputs with the data-field-key attribute within this card
+                card.querySelectorAll('[data-field-key]').forEach(input => {
+                    const key = input.dataset.fieldKey;
+                    let value;
+                    let shouldInclude = false;
+
+                    if (key === 'required') {
+                        value = input.checked;
+                        // Only include 'required: true' explicitly. Omit 'required: false' to save space.
+                        shouldInclude = value === true; 
+                    } else if (key === 'type') {
+                        value = input.value.trim();
+                        // Type is the minimum requirement for a valid field
+                        shouldInclude = value !== ''; 
+                    } else if (input.type === 'number') {
+                        value = parseFloat(input.value);
+                        shouldInclude = !isNaN(value); // Include if valid number
+                    } else if (key === 'options') {
+                        // Options must be converted to an array of strings
+                        const rawValue = input.value || '';
+                        const optionsArray = rawValue.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                        value = optionsArray;
+                        shouldInclude = optionsArray.length > 0;
+                    } else if (input.type === 'textarea' || input.tagName === 'TEXTAREA') {
+                        value = input.value.trim();
+                        shouldInclude = value !== ''; // Include if non-empty string
+                    } else { // Standard text input, select
+                        value = input.value.trim();
+                        shouldInclude = value !== ''; // Include if non-empty string
+                    }
+                    
+                    if (shouldInclude) {
+                        fieldObject[key] = value;
+                    }
+                });
+
+                // Only add the field if it has a 'type' property set
+                if (fieldObject.type) {
+                    fields.push(fieldObject);
+                }
+            });
+            return fields;
+        }
+
+
+        // --- Step 2: Config.json Logic (Updated to use dynamic fields) ---
+
+        /**
+         * Collects data from the form and generates the config.json object.
+         */
+        function getConfigJsonData() {
+            const now = Date.now();
+            
+            // Helper function for comma-separated string to array
+            const toArray = (value) => {
+                if (typeof value !== 'string') return [];
+                return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            };
+
+            // Read the dynamically created form field entries
+            const configuredFormFields = readDynamicFormFields();
+            
+            // Convert port to number, but allow it to be 0 or null if field is empty
+            const rawPort = document.getElementById('config-port').value;
+            const portValue = rawPort ? parseInt(rawPort, 10) : (rawPort === "0" ? 0 : null);
+            
+            // The final JSON structure:
+            const data = {
+                name: document.getElementById('config-name').value.trim() || "", 
+                available: document.getElementById('config-available').checked,
+                port: portValue,
+                exposable: document.getElementById('config-exposable').checked,
+                dynamic_config: document.getElementById('config-dynamic_config').checked,
+                id: document.getElementById('config-id').value.trim() || "",
+                description: document.getElementById('config-description').value.trim(),
+                tipi_version: parseInt(document.getElementById('config-tipi_version').value, 10) || 3,
+                version: document.getElementById('config-version').value.trim() || "",
+                categories: toArray(document.getElementById('config-categories').value),
+                short_desc: document.getElementById('config-short_desc').value.trim(),
+                author: document.getElementById('config-author').value.trim(),
+                source: document.getElementById('config-source').value.trim(),
+                website: document.getElementById('config-website').value.trim(),
+                
+                // 15. form_fields (array of objects from dynamic form)
+                form_fields: configuredFormFields,
+
+                // 16. supported_architectures (array of strings - from checkboxes)
+                supported_architectures: (function() {
+                    const archs = [];
+                    if (document.getElementById('arch_amd64')?.checked) archs.push('amd64');
+                    if (document.getElementById('arch_arm64')?.checked) archs.push('arm64');
+                    return archs;
+                })(),
+                
+                // 17. created_at (auto-generated timestamp) - Keep previous timestamp if it exists
+                created_at: appData.config?.created_at || Math.floor(now / 1000), // Unix timestamp in seconds
+                
+                // 18. updated_at (auto-generated timestamp)
+                updated_at: Math.floor(now / 1000), // Unix timestamp in seconds
+            };
+            
+            // Remove port if it is null (empty field)
+            if (data.port === null) {
+                delete data.port;
+            }
+
+            // Store for persistence and next step
+            appData.config = data;
+            return data;
+        }
+
+        /**
+         * Generates the config.json output and displays it in the textarea.
+         */
+        function updateConfigJsonOutput() {
+            const data = getConfigJsonData();
+            const outputTextarea = document.getElementById('json-output');
+            
+            // 1. Generate JSON string with 2-space indentation
+            let jsonString = JSON.stringify(data, null, 2);
+
+            // 2. Squash the supported_architectures array into a single line
+            const archRegex = /("supported_architectures":\s*\[)\s*([\s\S]*?)\s*\]/m;
+            jsonString = jsonString.replace(archRegex, (match, p1, p2) => {
+                let cleanedContent = p2.replace(/,\s*\n\s*/g, ', ') 
+                                       .replace(/\s*\n\s*/g, '') 
+                                       .trim();
+                return `${p1}${cleanedContent}]`;
+            });
+            
+            // 3. Squashing form_fields array elements onto single lines if empty, or formatting if populated
+            if (data.form_fields.length === 0) {
+                 // Match and squash empty array: "form_fields": [\n  ] -> "form_fields": []
+                 const emptyFormFieldsRegex = /("form_fields":\s*\[)\s*\]/m;
+                 jsonString = jsonString.replace(emptyFormFieldsRegex, (match, p1) => `${p1}]`);
+            } else {
+                 // For populated form_fields, ensure correct 4-space indentation for inner object
+                 const formFieldsRegex = /("form_fields":\s*\[)([\s\S]*?)(\s*\])/m;
+                 
+                 jsonString = jsonString.replace(formFieldsRegex, (match, p1) => {
+                    // Stringify the array with 4-space indentation for the inner content
+                    const fieldsArrayString = JSON.stringify(data.form_fields, null, 4);
+                    
+                    // Remove outer [ and ]
+                    let innerContent = fieldsArrayString.substring(1, fieldsArrayString.length - 1).trim();
+
+                    // Re-indent every line of the inner content to be offset by the parent array indentation (2 spaces)
+                    innerContent = innerContent.split('\n').map(line => `  ${line}`).join('\n');
+                    
+                    // Final assembly: array open, content, array close at 2-space offset
+                    return `${p1}\n${innerContent}\n  ]`;
+                 });
+            }
+            
+            // 4. Update the textarea
+            outputTextarea.value = jsonString;
+        }
+
+        // --- GLOBAL SETUP & LISTENERS ---
+
+        /**
+         * Sets up the necessary event listeners for form field property changes.
+         */
+        function setupFormFieldPropertyListeners() {
+            // Get all property checkboxes (data-property-key)
+            const propertyCheckboxes = document.querySelectorAll('.app-checkbox[data-property-key], .app-checkbox[data-form-type]');
+            
+            propertyCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    // When a property or type is toggled, re-render the content of ALL existing form field cards
+                    document.querySelectorAll('#form-field-entries .form-field-card').forEach(card => {
+                        const id = parseInt(card.dataset.fieldId, 10);
+                        
+                        // To re-render, we must pass the current state of the fields back in.
+                        const currentFieldValues = {};
+                        card.querySelectorAll('[data-field-key]').forEach(input => {
+                            const key = input.dataset.fieldKey;
+                            if (input.type === 'checkbox') {
+                                currentFieldValues[key] = input.checked;
+                            } else {
+                                currentFieldValues[key] = input.value;
+                            }
+                        });
+                        
+                        renderDynamicProperties(id, currentFieldValues);
+                    });
+                    // Also trigger output update
+                    updateConfigJsonOutput();
+                });
+            });
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleButton = document.getElementById('theme-toggle');
+            const logoLink = document.getElementById('logo-link');
+            const generateHomeBtn = document.getElementById('generate-app-btn-home');
+            const inputYamlBtn = document.getElementById('input-yaml-btn');
+            const gotoYamlBtn = document.getElementById('goto-yaml-btn'); 
+            const composeJsonBtn = document.getElementById('compose-json-btn');
+            const newFormFieldBtn = document.getElementById('new-form-field-btn');
+            const toggleFormFieldsBtn = document.getElementById('toggle-form-fields');
+            
+            // Theme Initialization
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            htmlElement.setAttribute('data-theme', currentTheme);
+            applyThemeVisuals(currentTheme);
+            toggleButton.addEventListener('click', toggleTheme);
+            
+            // Navigation Setup
+            logoLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showView('home-view');
+            });
+            generateHomeBtn.addEventListener('click', () => { goToStep(1); });
+            // Input YAML button now triggers the full validation and data transfer
+            inputYamlBtn.addEventListener('click', handleYamlInput); 
+            gotoYamlBtn.addEventListener('click', () => { goToStep(1); });
+            composeJsonBtn.addEventListener('click', () => {
+                updateConfigJsonOutput(); 
+                showMessage('success', "Config.json data saved! Ready for the next step.");
+            });
+
+            // Form Field Editor Setup
+            toggleFormFieldsBtn.addEventListener('click', toggleFormFieldsContent);
+            // Button now adds a completely blank new field
+            newFormFieldBtn.addEventListener('click', () => addNewFormField({ type: 'text', label: `New Field ${field_id_counter + 1}` })); 
+            
+            // Real-time Input Listeners for Step 2 Form (Metadata fields)
+            const configForm = document.getElementById('config-json-form');
+            if (configForm) {
+                configForm.addEventListener('input', updateConfigJsonOutput);
+                configForm.addEventListener('change', updateConfigJsonOutput); 
+            }
+
+            // Setup listeners for property checkboxes
+            setupFormFieldPropertyListeners();
+            
+            // --- Default State ---
+            // Ensure the main container is hidden initially, and only the home view is shown.
+            showView('home-view');
+            
+            // Collapse the form fields section by default
+            const formFieldsContent = document.getElementById('form-fields-content');
+            if (formFieldsContent) formFieldsContent.classList.add('collapse-hidden');
+            const formFieldsIcon = document.getElementById('form-fields-icon');
+            if (formFieldsIcon) formFieldsIcon.classList.replace('fa-chevron-down', 'fa-chevron-right');
+
+        });
+    </script>
+</body>
+</html>
