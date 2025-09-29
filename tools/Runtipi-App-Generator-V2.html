@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <!-- Load Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Load Lucide Icons for checkmarks and X in new checkboxes -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Load YAML and JSZip Libraries for Generator functionality -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
@@ -31,7 +33,7 @@
             --color-runtipi-red: #FF66A3;
             --color-runtipi-blue: #6495ED;
             /* CTA */
-            --color-cta: #131313;
+            --color-cta: #1F1F1F; /* Adjusted to blend better with cards, but keep dark for contrast */
             --color-cta-hover: #000000;
             --color-cta-border: #555555;
             --color-header-icon: #E2E8F0;
@@ -52,7 +54,7 @@
             --color-border: #E5E7EB;
             --color-black-fill: #000000;
             /* CTA */
-            --color-cta: #1F1F1F; 
+            --color-cta: #1F1F2F; /* Darker CTA in light mode */
             --color-cta-hover: #000000;
             --color-cta-border: #131313;
             --color-header-icon: #1F2937;
@@ -110,6 +112,71 @@
             transform: translateY(-2px);
         }
 
+        /* General Input Style */
+        .app-input {
+            background-color: var(--bg-input); 
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .app-input:focus {
+            outline: none;
+            border-color: var(--color-runtipi-red);
+            box-shadow: 0 0 0 1px var(--color-runtipi-red);
+        }
+        
+        /* Checkbox Container Style */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            height: 100%; /* Important for alignment in the grid */
+            padding-top: 0.5rem;
+        }
+
+        /* Standard Checkboxes (Available, Exposable, Dynamic Config) */
+        .app-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 0.25rem;
+            background-color: var(--bg-input);
+            border: 1px solid var(--color-border);
+            cursor: pointer;
+            appearance: none;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .app-checkbox:checked {
+            /* The base app uses Runtipi Red for the primary toggles */
+            background-color: var(--color-runtipi-red); 
+            border-color: var(--color-runtipi-red);
+            /* This is where the checkmark icon from font-awesome would go if it wasn't hidden by 'appearance: none;' 
+               For simplicity, the tick is usually handled by the browser default/or a custom background image. 
+               We will stick to the appearance:none style for these. */
+        }
+        .app-checkbox:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(100, 149, 237, 0.5); /* Blue glow on focus */
+        }
+
+        /* Custom styles for the ARCHITECTURE checkboxes (to meet red X requirement) */
+        /* Default unchecked state: Shows Red X on input background */
+        .arch-checkbox + .arch-indicator {
+            background-color: var(--bg-input); 
+            border-color: var(--color-border);
+            color: var(--color-error); /* Red X color */
+            transition: all 0.2s ease;
+        }
+
+        /* Checked state: Shows White Checkmark on Runtipi Blue background */
+        .arch-checkbox:checked + .arch-indicator {
+            background-color: var(--color-runtipi-blue); 
+            border-color: var(--color-runtipi-blue);
+            color: white;
+            opacity: 1;
+        }
+
         /* CTA Button - Reusable Class */
         .btn-cta {
             background-color: var(--color-cta); 
@@ -129,6 +196,35 @@
             transform: none;
             border-color: var(--color-cta-border);
         }
+
+        /* Secondary/Back Button Style */
+        .btn-secondary {
+            background-color: var(--bg-card);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--bg-container);
+            border-color: var(--color-runtipi-red);
+            transform: scale(1.02);
+        }
+
+        /* Secondary/Back Button Style (LIGHT MODE OVERRIDE) - FORCED DARK APPEARANCE */
+        html[data-theme='light'] .btn-secondary {
+            background-color: var(--color-cta);
+            border-color: var(--color-cta-border);
+            color: #FFFFFF; 
+        }
+
+        /* Secondary/Back Button Hover (LIGHT MODE OVERRIDE) */
+        html[data-theme='light'] .btn-secondary:hover {
+            background-color: var(--color-cta-hover);
+            border-color: var(--color-runtipi-red);
+        }
+
 
         /* --- Gradient Border Button with Tooltip (Reused) --- */
         .icon-btn-gradient {
@@ -155,18 +251,18 @@
         .icon-btn-gradient .tooltip,
         #theme-toggle .tooltip,
         #logo-link .tooltip,
-        .footer-link-group .icon-btn-gradient .tooltip { /* Added target for footer links */
+        .footer-link-group .icon-btn-gradient .tooltip { 
             visibility: hidden;
             background-color: var(--color-runtipi-red);
             color: #fff;
             text-align: center;
             border-radius: 0.375rem;
-            padding: 0.375rem 0.625rem; /* Reduced padding */
+            padding: 0.375rem 0.625rem; 
             position: absolute;
-            z-index: 20; /* Increased z-index */
+            z-index: 20; 
             opacity: 0;
             white-space: nowrap;
-            font-size: 0.75rem; /* Smaller font size (text-xs) */
+            font-size: 0.75rem; 
             font-weight: 500;
             pointer-events: none;
             transition: opacity 0.2s, transform 0.2s;
@@ -176,7 +272,7 @@
         .icon-btn-gradient .tooltip::after,
         #theme-toggle .tooltip::after,
         #logo-link .tooltip::after,
-        .footer-link-group .icon-btn-gradient .tooltip::after { /* Added target for footer links */
+        .footer-link-group .icon-btn-gradient .tooltip::after { 
             content: "";
             position: absolute;
             top: 100%;
@@ -191,12 +287,12 @@
         .icon-btn-gradient:hover .tooltip,
         #theme-toggle:hover .tooltip,
         #logo-link:hover .tooltip,
-        .footer-link-group .icon-btn-gradient:hover .tooltip { /* Added target for footer links */
+        .footer-link-group .icon-btn-gradient:hover .tooltip { 
             visibility: visible;
             opacity: 1;
         }
 
-        /* Specific positioning for HEADER elements (GitHub, Theme, Logo) - Tooltips appear BELOW */
+        /* Specific positioning for HEADER elements */
         .header-github-btn .tooltip,
         #theme-toggle .tooltip,
         #logo-link .tooltip { 
@@ -212,7 +308,7 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* Specific Arrow direction for HEADER elements (pointing UP to button) */
+        /* Specific Arrow direction for HEADER elements */
         .header-github-btn .tooltip::after,
         #theme-toggle .tooltip::after,
         #logo-link .tooltip::after { 
@@ -221,30 +317,30 @@
             border-color: transparent transparent var(--color-runtipi-red) transparent; 
         }
         
-        /* Specific positioning for FOOTER elements - Tooltips appear ABOVE */
+        /* Specific positioning for FOOTER elements */
         .footer-link-group .icon-btn-gradient .tooltip {
             top: auto;
-            bottom: 100%; /* Position above the element */
+            bottom: 100%; 
             left: 50%;
-            transform: translateX(-50%) translateY(10px); /* Initial offset for smooth entrance */
+            transform: translateX(-50%) translateY(10px); 
         }
 
         .footer-link-group .icon-btn-gradient:hover .tooltip {
-            transform: translateX(-50%) translateY(0); /* Move up to final position on hover */
+            transform: translateX(-50%) translateY(0); 
         }
 
-        /* Specific Arrow direction for FOOTER elements (Arrow points DOWN from tooltip box to button) */
+        /* Specific Arrow direction for FOOTER elements */
         .footer-link-group .icon-btn-gradient .tooltip::after {
-            top: 100%; /* Position arrow at the bottom edge of the tooltip */
+            top: 100%; 
             bottom: auto; 
-            border-color: var(--color-runtipi-red) transparent transparent transparent; /* Arrow points down */
+            border-color: var(--color-runtipi-red) transparent transparent transparent; 
         }
 
         /* Message box styles */
         .message-box {
             padding: 1rem;
             border-radius: 0.5rem;
-            margin-top: 1rem;
+            margin-bottom: 1rem;
             font-weight: 500;
             color: white;
             transition: opacity 0.3s ease-in-out;
@@ -264,7 +360,6 @@
         <!-- Navigation Bar -->
         <header class="flex justify-between items-center py-6 header-border border-b">
             <!-- Logo/Title wrapped in an anchor tag with ID for navigation -->
-            <!-- ADDED: relative positioning for tooltip and the tooltip span -->
             <a href="#" id="logo-link" class="text-2xl font-bold flex items-center transition duration-200 hover:opacity-85 cursor-pointer relative">
                 
                 <!-- START SVG Tipi Logo - Replicating Runtipi Style -->
@@ -273,7 +368,6 @@
                     <path d="M15 4L27 26H3L15 4Z" fill="#F4511E"/>
                     <!-- Dark Inner Shadow/Opening - This inner color MUST change for light theme -->
                     <path d="M15 7L24 24H6L15 7Z" fill="var(--bg-body)"/>
-                    <!-- Outer Line (Red) -->
                     <path d="M15 4L27 26" stroke="#FF66A3" stroke-width="2" stroke-linecap="round"/>
                     <path d="M3 26L15 4" stroke="#FF66A3" stroke-width="2" stroke-linecap="round"/>
                     <!-- Horizontal Stripes (Yellowish-Pink) -->
@@ -290,7 +384,7 @@
             <!-- Right-aligned Icons and Toggle -->
             <div class="flex items-center space-x-4">
                 <!-- GitHub Button/Icon Link (Star This Project) -->
-                <a href="https://github.com/acidgreenservers/runtipi-homelab-appstore" target="_blank" 
+                <a href="https://github.com/acidgreenservers/runtipi-homelab-appstore/tree/master/Tools" target="_blank" 
                    class="icon-btn-gradient flex items-center text-color-primary font-medium py-2 px-4 rounded-lg header-github-btn" 
                    data-tooltip="Star This Project">
                     <i class="fas fa-star text-yellow-400 mr-2"></i>
@@ -399,45 +493,156 @@
 
             <!-- STEP 1: YAML INPUT -->
             <div id="generator-step-1" class="step-view">
-                <h2 class="text-4xl font-extrabold text-center mb-10">
+                <h2 class="text-4xl font-extrabold text-center mb-4">
                     <span class="text-gradient">Step 1: Input YAML</span>
                 </h2>
+                
+                <!-- Error Message Container (Centered and styled to match button width, ADDED PY-4 for spacing) -->
+                <div id="yaml-error-message-container" class="mx-auto w-full max-w-sm hidden py-4">
+                    <p id="yaml-error-message" class="text-center font-medium text-white p-2 rounded-lg" 
+                       style="background-color: var(--color-error); width: 100%;">
+                        Invalid YAML Input. Please check your formatting.
+                    </p>
+                </div>
 
-                <div class="bg-card-dark p-6 rounded-xl border-dark border">
+                <!-- Increased mt-0 to utilize the py-4 space above -->
+                <div class="bg-card-dark p-6 rounded-xl border-dark border mt-0">
                     <h3 class="text-xl font-semibold mb-4">Paste Your Docker Compose YAML</h3>
                     <textarea id="yaml-input" rows="15" class="w-full bg-input-dark p-3 rounded-lg border border-dark text-sm focus:ring-runtipi-red focus:border-runtipi-red resize-none" placeholder="Paste your standard docker-compose.yaml here..."></textarea>
-                    
-                    <button id="input-yaml-btn" class="btn-cta w-full text-lg font-semibold py-4 mt-8 rounded-lg">
+                </div>
+
+                <!-- Step 1 Button (Now matches error message width and is centered) -->
+                <div class="flex justify-center mt-8">
+                    <button id="input-yaml-btn" class="btn-cta text-lg font-semibold py-4 px-12 rounded-lg w-full max-w-sm">
                         <i class="fas fa-arrow-right mr-2"></i> Input YAML
                     </button>
                 </div>
             </div>
 
-            <!-- STEP 2: CONFIG.JSON (Placeholder for future functionality) -->
+            <!-- STEP 2: CONFIG.JSON -->
             <div id="generator-step-2" class="step-view hidden">
                  <h2 class="text-4xl font-extrabold text-center mb-10">
-                    <span class="text-gradient">Step 2: Config.json</span>
+                    <span class="text-gradient">Step 2: Config.json Configuration</span>
                 </h2>
-                <h3 class="text-2xl font-semibold text-center text-secondary-dark mb-8">
-                    Configure the metadata and properties of the **config.json**
+                <h3 class="text-xl font-semibold text-center text-secondary-dark mb-8">
+                    Fill in the metadata fields for the Runtipi **config.json** file.
                 </h3>
 
                 <div class="bg-card-dark p-6 rounded-xl border-dark border">
-                    <p class="text-center text-secondary-dark h-64 flex items-center justify-center">
-                        Configuration form for **config.json** will be built here in the next steps.
-                        <br>
-                        <i class="fas fa-cogs mt-4 text-4xl text-runtipi-blue"></i>
-                    </p>
                     
-                    <!-- NAVIGATION BUTTONS -->
-                    <div class="flex justify-center space-x-4 mt-8">
-                        <button id="goto-yaml-btn" class="btn-cta text-lg font-semibold py-3 px-8 rounded-lg bg-gray-500 hover:bg-gray-700 border-gray-600 w-1/3">
-                            <i class="fas fa-file-alt mr-2"></i> Input YAML
-                        </button>
-                        <button id="compose-json-btn" class="btn-cta text-lg font-semibold py-3 px-8 rounded-lg w-1/3" disabled>
-                            <i class="fas fa-file-code mr-2"></i> Docker-Compose.json
-                        </button>
+                    <!-- Input Form -->
+                    <h3 class="text-xl font-semibold mb-4 text-runtipi-red">Application Metadata</h3>
+                    
+                    <div id="config-json-form" class="grid grid-cols-1 gap-x-6 gap-y-4 mb-8">
+                        
+                        <!-- 1. name -->
+                        <label class="block text-sm font-medium">Name <span class="text-runtipi-red">*</span></label>
+                        <input type="text" id="config-name" class="app-input" value="" placeholder="e.g., Nginx">
+
+                        <!-- 2. available -->
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="config-available" class="app-checkbox" checked>
+                            <label for="config-available" class="ml-3 text-sm font-medium">Available (App is visible in store)</label>
+                        </div>
+
+                        <!-- 3. port -->
+                        <label class="block text-sm font-medium">Port <span class="text-runtipi-red">*</span></label>
+                        <input type="number" id="config-port" class="app-input" value="" placeholder="e.g., 8754">
+                        
+                        <!-- 4. exposable -->
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="config-exposable" class="app-checkbox" checked>
+                            <label for="config-exposable" class="ml-3 text-sm font-medium">Exposable (Allow user access)</label>
+                        </div>
+
+                        <!-- 5. dynamic_config -->
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="config-dynamic_config" class="app-checkbox" checked>
+                            <label for="config-dynamic_config" class="ml-3 text-sm font-medium">Dynamic Config (Use Runtipi host settings)</label>
+                        </div>
+
+                        <!-- 6. id -->
+                        <label class="block text-sm font-medium">ID (URL Safe) <span class="text-runtipi-red">*</span></label>
+                        <input type="text" id="config-id" class="app-input" value="" placeholder="e.g., nginx">
+                        
+                        <!-- 7. description (Textarea for long content) -->
+                        <label class="block text-sm font-medium mt-2">Description (Long)</label>
+                        <textarea id="config-description" rows="3" class="app-input resize-none" placeholder="A detailed description of the app."></textarea>
+
+                        <!-- 8. tipi_version -->
+                        <label class="block text-sm font-medium">Tipi Version <span class="text-runtipi-red">*</span></label>
+                        <input type="number" id="config-tipi_version" class="app-input" value="3" placeholder="e.g., 3">
+                        
+                        <!-- 9. version -->
+                        <label class="block text-sm font-medium">Version <span class="text-runtipi-red">*</span></label>
+                        <input type="text" id="config-version" class="app-input" value="" placeholder="e.g., 1.25.3">
+
+                        <!-- 10. categories -->
+                        <label class="block text-sm font-medium">Categories (Comma-separated)</label>
+                        <input type="text" id="config-categories" class="app-input" value="" placeholder="e.g., utilities, media, database">
+
+                        <!-- 11. short_desc -->
+                        <label class="block text-sm font-medium">Short Description</label>
+                        <input type="text" id="config-short_desc" class="app-input" value="" placeholder="e.g., Open-source simple and fast web server.">
+
+                        <!-- 12. author -->
+                        <label class="block text-sm font-medium">Author</label>
+                        <input type="text" id="config-author" class="app-input" value="" placeholder="e.g., nginx">
+
+                        <!-- 13. source -->
+                        <label class="block text-sm font-medium">Source (GitHub URL)</label>
+                        <input type="url" id="config-source" class="app-input" value="" placeholder="e.g., https://github.com/my/app">
+
+                        <!-- 14. website -->
+                        <label class="block text-sm font-medium">Website (Official Site URL)</label>
+                        <input type="url" id="config-website" class="app-input" value="" placeholder="e.g., https://www.nginx.com/">
+                        
+                        <!-- 15. form_fields (JSON Array String) -->
+                        <label class="block text-sm font-medium mt-2">Form Fields (JSON Array String)</label>
+                        <textarea id="config-form_fields" rows="4" class="app-input resize-none font-mono text-xs" placeholder="[ { 'name': 'PORT', 'label': 'Container Port', 'default': '8080', 'type': 'number' } ]">[]</textarea>
+
+                        <!-- 16. supported_architectures (CUSTOM CHECKBOXES) -->
+                        <div class="block text-sm font-medium mb-2">Supported Architectures <span class="text-runtipi-red">*</span></div>
+                        
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-8">
+                            
+                            <!-- AMD64 Checkbox -->
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="arch_amd64" class="hidden arch-checkbox" checked>
+                                <label for="arch_amd64" id="indicator_amd64" class="arch-indicator cursor-pointer flex items-center justify-center border w-5 h-5 rounded-sm transition-all duration-150 text-base">
+                                    <!-- Icon inserted by JavaScript -->
+                                </label>
+                                <label for="arch_amd64" class="text-sm font-medium select-none text-secondary-dark">amd64</label>
+                            </div>
+
+                            <!-- ARM64 Checkbox -->
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="arch_arm64" class="hidden arch-checkbox" checked>
+                                <label for="arch_arm64" id="indicator_arm64" class="arch-indicator cursor-pointer flex items-center justify-center border w-5 h-5 rounded-sm transition-all duration-150 text-base">
+                                    <!-- Icon inserted by JavaScript -->
+                                </label>
+                                <label for="arch_arm64" class="text-sm font-medium select-none text-secondary-dark">arm64</label>
+                            </div>
+                        </div>
+
                     </div>
+
+                    <!-- Output Display -->
+                    <h3 class="text-xl font-semibold mb-4 text-runtipi-blue">Generated config.json (Output)</h3>
+                    <p class="text-secondary-dark text-sm mb-2">`created_at` and `updated_at` are automatically set as Unix timestamps.</p>
+                    <textarea id="json-output" rows="20" readonly class="w-full bg-input-dark p-3 rounded-lg border border-dark text-sm resize-none cursor-default font-mono"></textarea>
+                </div>
+                    
+                <!-- NAVIGATION BUTTONS -->
+                <div class="flex justify-between space-x-4 mt-8">
+                    <!-- Secondary Button (Go Back) -->
+                    <button id="goto-yaml-btn" class="btn-secondary text-lg font-semibold py-4 px-12 rounded-lg w-1/2">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to YAML
+                    </button>
+                    <!-- Primary Button (Next Step) -->
+                    <button id="compose-json-btn" class="btn-cta text-lg font-semibold py-4 px-12 rounded-lg w-1/2">
+                        <i class="fas fa-file-code mr-2"></i> Proceed to Compose.json
+                    </button>
                 </div>
             </div>
             
@@ -492,6 +697,10 @@
     </div>
 
     <script>
+        // Initialize Lucide icons
+        // This must be run on DOMContentLoaded or after the icons are added
+        let lucideInitialized = false; 
+
         // --- Global State & Theme Logic ---
 
         const htmlElement = document.documentElement;
@@ -548,15 +757,85 @@
             window.scrollTo(0, 0); // Scroll to top on view change
         }
 
+        // --- Supported Architecture Checkbox Logic ---
+
         /**
-         * Switches between the generator steps.
+         * Updates the visual indicator for a given architecture checkbox
+         * based on its checked state, displaying a checkmark or a red X.
+         * @param {HTMLInputElement} checkbox The native checkbox element.
+         */
+        function updateArchitectureIndicator(checkbox) {
+            const indicatorId = 'indicator_' + checkbox.id.replace('arch_', '');
+            const indicator = document.getElementById(indicatorId);
+            
+            if (!indicator) return;
+
+            // Clear previous content
+            indicator.innerHTML = '';
+
+            if (checkbox.checked) {
+                // State ON: Display blue checkmark (to match the aesthetic theme)
+                // Classes are primarily controlled by CSS, but we insert the icon SVG here.
+                // The CSS controls the color transition.
+                indicator.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>';
+                
+            } else {
+                // State OFF: Display red 'X' 
+                // The CSS controls the red color and background color to match the card/input.
+                indicator.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+            }
+        }
+        
+        /**
+         * Initializes and sets up event listeners for the architecture checkboxes.
+         */
+        function setupArchitectureCheckboxes() {
+            const archCheckboxes = document.querySelectorAll('.arch-checkbox');
+            archCheckboxes.forEach(checkbox => {
+                // Initial render
+                updateArchitectureIndicator(checkbox);
+                
+                // Listen for changes
+                checkbox.addEventListener('change', () => {
+                    updateArchitectureIndicator(checkbox);
+                    // Also trigger the main JSON output update
+                    updateConfigJsonOutput(); 
+                });
+            });
+            // Run the initial indicator update on the first render for all
+            archCheckboxes.forEach(updateArchitectureIndicator);
+        }
+
+        /**
+         * Switches between the generator steps and handles auto-filling.
          * @param {number} stepNumber - 1 or 2.
          */
         function goToStep(stepNumber) {
             showView('multi-step-generator-container'); // Ensure the container is visible
             document.querySelectorAll('.step-view').forEach(el => el.classList.add('hidden'));
             document.getElementById(`generator-step-${stepNumber}`).classList.remove('hidden');
-            window.scrollTo(0, 0);
+            
+            // Special initialization for Step 2
+            if (stepNumber === 2) {
+                // Auto-fill logic based on YAML
+                if (appData.appName && appData.appId) {
+                    document.getElementById('config-name').value = appData.appName;
+                    document.getElementById('config-id').value = appData.appId;
+                    if (appData.appPort) {
+                        document.getElementById('config-port').value = appData.appPort;
+                    }
+                }
+
+                // Ensure the Tipi Version is explicitly set to 3 as default
+                document.getElementById('config-tipi_version').value = 3;
+                
+                // Initialize the architecture checkboxes visuals and listeners
+                setupArchitectureCheckboxes();
+
+                updateConfigJsonOutput();
+            }
+
+            window.scrollTo(0, 0); // Scroll to top on step change
         }
 
         function showMessage(type, message) {
@@ -572,32 +851,232 @@
 
         // --- Step 1: YAML Input Logic ---
 
+        /**
+         * Formats a service name (e.g., 'my_web_service') into a display name ('My Web Service')
+         * and a URL-safe ID ('my-web-service').
+         * @param {string} serviceName - The raw service name from docker-compose.
+         * @returns {{appName: string, appId: string}}
+         */
+        function formatServiceName(serviceName) {
+            let hyphenated = serviceName.toLowerCase().trim().replace(/[\s_]+/g, '-').replace(/^-|-$/g, '');
+            let appName = hyphenated.split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+            let appId = hyphenated;
+            return { appName, appId };
+        }
+        
+        /**
+         * Handles the YAML input validation and parsing.
+         * Uses a try...catch block to prevent crashes from invalid input.
+         */
         function handleYamlInput() {
             const yamlInput = document.getElementById('yaml-input').value;
+            const errorMessageContainer = document.getElementById('yaml-error-message-container');
+            const errorMessage = document.getElementById('yaml-error-message');
             
+            errorMessageContainer.classList.add('hidden');
+
             if (!yamlInput.trim()) {
                 showMessage('error', "Please paste your docker-compose YAML content before proceeding.");
                 return;
             }
 
             try {
-                // Perform quick parse check just to ensure it's valid YAML
                 const compose = jsyaml.load(yamlInput);
+                
                 if (!compose || !compose.services || Object.keys(compose.services).length === 0) {
-                     throw new Error("YAML parsed but no services found in the compose file.");
+                     throw new Error("The parsed file does not contain a 'services' section.");
                 }
                 
-                // Store the parsed YAML (for future use in step 2)
+                const serviceNames = Object.keys(compose.services);
+                const firstServiceName = serviceNames[0];
+                const firstService = compose.services[firstServiceName];
+                
+                const { appName, appId } = formatServiceName(firstServiceName);
+
+                let hostPort = ''; 
+                
+                if (firstService.ports && Array.isArray(firstService.ports) && firstService.ports.length > 0) {
+                    const firstPortMapping = firstService.ports[0];
+                    
+                    if (typeof firstPortMapping === 'string') {
+                        const parts = firstPortMapping.split(':');
+                        
+                        let portString = null;
+                        
+                        if (parts.length >= 2) {
+                            portString = parts[parts.length - 2]; 
+                            
+                            const portNumber = parseInt(portString, 10);
+                            if (!isNaN(portNumber) && portNumber > 0) {
+                                hostPort = portNumber.toString();
+                            }
+                        } else if (parts.length === 1) {
+                            const portNumber = parseInt(parts[0], 10);
+                             if (!isNaN(portNumber) && portNumber > 0) {
+                                hostPort = portNumber.toString();
+                            }
+                        }
+                    }
+                }
+
                 appData.compose = compose;
                 appData.yamlInput = yamlInput;
-
-                // Move to the next step
+                appData.appName = appName;
+                appData.appId = appId;
+                appData.appPort = hostPort;
+                
                 goToStep(2);
 
             } catch (e) {
                 console.error("YAML Parsing Error:", e);
-                showMessage('error', `YAML parsing failed. Please check your syntax: ${e.message}`);
+                
+                let displayMessage = "Invalid YAML Input. Please check your formatting.";
+                
+                if (e.mark) {
+                     displayMessage = `YAML Parsing Error near line ${e.mark.line + 1}: Check your syntax and indentation.`;
+                } else if (e.message.includes("services")) {
+                    displayMessage = e.message;
+                }
+                
+                errorMessage.textContent = displayMessage;
+                errorMessageContainer.classList.remove('hidden');
+                
+                showMessage('error', displayMessage);
             }
+        }
+        
+        // --- Step 2: Config.json Logic ---
+
+        /**
+         * Collects data from the form and generates the config.json object.
+         */
+        function getConfigJsonData() {
+            const now = Date.now();
+            
+            // Helper function for comma-separated string to array (NOT USED for architectures anymore)
+            const toArray = (value) => {
+                if (typeof value !== 'string') return [];
+                return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            };
+
+            // Helper function for safe JSON parsing
+            const parseJsonArray = (value) => {
+                if (!value || value.trim() === '[]') return [];
+                try {
+                    const cleanedValue = value.trim().replace(/'/g, '"');
+                    return JSON.parse(cleanedValue);
+                } catch (e) {
+                    return []; 
+                }
+            };
+            
+            // Collect supported architectures from checkboxes
+            const supportedArchitectures = [];
+            if (document.getElementById('arch_amd64')?.checked) {
+                supportedArchitectures.push('amd64');
+            }
+            if (document.getElementById('arch_arm64')?.checked) {
+                supportedArchitectures.push('arm64');
+            }
+
+            const data = {
+                // 1. name (string)
+                name: document.getElementById('config-name').value.trim() || "", 
+                
+                // 2. available (boolean)
+                available: document.getElementById('config-available').checked,
+
+                // 3. port (number)
+                port: parseInt(document.getElementById('config-port').value, 10) || 0,
+                
+                // 4. exposable (boolean)
+                exposable: document.getElementById('config-exposable').checked,
+                
+                // 5. dynamic_config (boolean)
+                dynamic_config: document.getElementById('config-dynamic_config').checked,
+                
+                // 6. id (string)
+                id: document.getElementById('config-id').value.trim() || "",
+                
+                // 7. description (string - textarea)
+                description: document.getElementById('config-description').value.trim(),
+                
+                // 8. tipi_version (number)
+                tipi_version: parseInt(document.getElementById('config-tipi_version').value, 10) || 3,
+                
+                // 9. version (string)
+                version: document.getElementById('config-version').value.trim() || "",
+
+                // 10. categories (array of strings)
+                categories: toArray(document.getElementById('config-categories').value),
+
+                // 11. short_desc (string)
+                short_desc: document.getElementById('config-short_desc').value.trim(),
+
+                // 12. author (string)
+                author: document.getElementById('config-author').value.trim(),
+
+                // 13. source (string - url)
+                source: document.getElementById('config-source').value.trim(),
+                
+                // 14. website (string - url)
+                website: document.getElementById('config-website').value.trim(),
+                
+                // 15. form_fields (array of objects - from JSON string)
+                form_fields: parseJsonArray(document.getElementById('config-form_fields').value),
+
+                // 16. supported_architectures (array of strings - from checkboxes)
+                supported_architectures: supportedArchitectures,
+                
+                // 17. created_at (auto-generated timestamp) - Keep previous timestamp if it exists
+                created_at: appData.config?.created_at || Math.floor(now / 1000), // Unix timestamp in seconds
+                
+                // 18. updated_at (auto-generated timestamp)
+                updated_at: Math.floor(now / 1000), // Unix timestamp in seconds
+            };
+
+            // Store for persistence and next step
+            appData.config = data;
+            return data;
+        }
+
+        /**
+         * Generates the config.json output and displays it in the textarea.
+         * Now includes custom formatting to put 'supported_architectures' on a single line.
+         */
+        function updateConfigJsonOutput() {
+            const data = getConfigJsonData();
+            const outputTextarea = document.getElementById('json-output');
+            
+            // 1. Generate JSON string with 2-space indentation
+            let jsonString = JSON.stringify(data, null, 2);
+
+            // 2. Use regex to find and squash the supported_architectures array into a single line
+            // Regex Explanation:
+            // ("supported_architectures":\s*\[): Group 1 captures the key and opening bracket
+            // [\s\S]*?): Group 2 captures the contents (including newlines and indentation) non-greedily
+            // (\s*\]): Match the closing bracket
+            const archRegex = /("supported_architectures":\s*\[)\s*([\s\S]*?)\s*\]/m;
+
+            jsonString = jsonString.replace(archRegex, (match, p1, p2) => {
+                // p1: '"supported_architectures": ['
+                // p2: The contents, e.g., '  "amd64",\n    "arm64"\n  '
+                
+                // Clean up the contents: 
+                // a) Replace the comma + newline + indentation pattern with ", " 
+                // b) Remove any remaining extraneous newlines/spaces
+                let cleanedContent = p2.replace(/,\s*\n\s*/g, ', ') 
+                                       .replace(/\s*\n\s*/g, '') 
+                                       .trim();
+
+                // Reconstruct the line as inline:
+                return `${p1}${cleanedContent}]`;
+            });
+
+            // 3. Update the textarea
+            outputTextarea.value = jsonString;
         }
 
 
@@ -608,9 +1087,8 @@
             const logoLink = document.getElementById('logo-link');
             const generateHomeBtn = document.getElementById('generate-app-btn-home');
             const inputYamlBtn = document.getElementById('input-yaml-btn');
-            
-            // New button for navigating back to YAML input from Step 2
             const gotoYamlBtn = document.getElementById('goto-yaml-btn'); 
+            const composeJsonBtn = document.getElementById('compose-json-btn');
 
             // --- Theme Initialization ---
             const currentTheme = localStorage.getItem('theme') || 'dark';
@@ -620,13 +1098,11 @@
             toggleButton.addEventListener('click', toggleTheme);
 
             // --- Navigation Setup ---
-            // Logo click (to home) - This handles navigation from any page back to the home view.
             logoLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 showView('home-view');
             });
 
-            // Home CTA click (to generator step 1)
             generateHomeBtn.addEventListener('click', () => {
                 goToStep(1);
             });
@@ -634,29 +1110,37 @@
             // Step 1: Input YAML button click (to step 2)
             inputYamlBtn.addEventListener('click', handleYamlInput);
 
-            // Step 2: "Input YAML" button click (to step 1)
+            // Step 2: "Back to YAML" button click (to step 1)
             if (gotoYamlBtn) {
                 gotoYamlBtn.addEventListener('click', () => {
                     goToStep(1);
                 });
             }
+            
+            // Step 2: "Proceed to Compose.json" button click (for future step 3)
+            if (composeJsonBtn) {
+                composeJsonBtn.addEventListener('click', () => {
+                    // Final update before moving on
+                    updateConfigJsonOutput(); 
+                    
+                    showMessage('success', "Config.json data saved! Ready for Step 3: Docker-Compose.json generation (Feature to be implemented).");
+                    // You would implement goToStep(3) here once it exists
+                });
+            }
 
-            // Default YAML for testing
-            document.getElementById('yaml-input').value = `version: '3.7'
-services:
-  web:
-    image: nginx:latest
-    container_name: web-server-app
-    restart: unless-stopped
-    ports:
-      - 8080:80 # External:Container
-    volumes:
-      - ./data:/usr/share/nginx/html # Host:Container
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/New_York
-      - CUSTOM_VAR=initial_value`;
+            // --- Real-time Input Listeners for Step 2 Form ---
+            const configForm = document.getElementById('config-json-form');
+            if (configForm) {
+                // Use delegation to catch all input and change events on the form fields, 
+                // excluding the architecture fields which have their own listener setup.
+                // We listen to the arch checkboxes here just in case the setupArchitectureCheckboxes 
+                // hasn't run yet, but the dedicated listener is safer for visuals.
+                configForm.addEventListener('input', updateConfigJsonOutput);
+                configForm.addEventListener('change', updateConfigJsonOutput); 
+            }
+            
+            // Initial state: Remove default YAML content to start blank
+            document.getElementById('yaml-input').value = '';
         });
     </script>
 </body>
