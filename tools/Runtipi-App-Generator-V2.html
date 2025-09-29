@@ -128,6 +128,31 @@
             box-shadow: 0 0 0 1px var(--color-runtipi-red);
         }
         
+        /* Select Dropdown Style */
+        .app-select {
+            background-color: var(--bg-input);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            width: 100%;
+            transition: border-color 0.2s;
+            /* Appearance fix for dark background in Chrome/Firefox */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%2394A3B8' d='M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5rem;
+        }
+
+        .app-select:focus {
+            outline: none;
+            border-color: var(--color-runtipi-red);
+            box-shadow: 0 0 0 1px var(--color-runtipi-red);
+        }
+        
         /* Checkbox Container Style */
         .checkbox-container {
             display: flex;
@@ -136,7 +161,7 @@
             padding-top: 0.5rem;
         }
 
-        /* Standard Checkboxes (Available, Exposable, Dynamic Config) */
+        /* Standard Checkboxes (Available, Exposable, Dynamic Config, and now Architectures) */
         .app-checkbox {
             width: 1.25rem;
             height: 1.25rem;
@@ -147,36 +172,23 @@
             appearance: none;
             transition: background-color 0.2s, border-color 0.2s;
         }
+        
+        /* Custom checkmark appearance (using background image for cross-browser consistency) */
         .app-checkbox:checked {
-            /* The base app uses Runtipi Red for the primary toggles */
             background-color: var(--color-runtipi-red); 
             border-color: var(--color-runtipi-red);
-            /* This is where the checkmark icon from font-awesome would go if it wasn't hidden by 'appearance: none;' 
-               For simplicity, the tick is usually handled by the browser default/or a custom background image. 
-               We will stick to the appearance:none style for these. */
+            /* SVG Checkmark: White color, slightly bold stroke */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-width='2.5' d='M6 10l3 3 6-6'/%3E%3C/svg%3E");
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-position: center;
         }
+        
         .app-checkbox:focus {
             outline: none;
             box-shadow: 0 0 0 3px rgba(100, 149, 237, 0.5); /* Blue glow on focus */
         }
-
-        /* Custom styles for the ARCHITECTURE checkboxes (to meet red X requirement) */
-        /* Default unchecked state: Shows Red X on input background */
-        .arch-checkbox + .arch-indicator {
-            background-color: var(--bg-input); 
-            border-color: var(--color-border);
-            color: var(--color-error); /* Red X color */
-            transition: all 0.2s ease;
-        }
-
-        /* Checked state: Shows White Checkmark on Runtipi Blue background */
-        .arch-checkbox:checked + .arch-indicator {
-            background-color: var(--color-runtipi-blue); 
-            border-color: var(--color-runtipi-blue);
-            color: white;
-            opacity: 1;
-        }
-
+        
         /* CTA Button - Reusable Class */
         .btn-cta {
             background-color: var(--color-cta); 
@@ -316,7 +328,7 @@
             bottom: 100%;
             border-color: transparent transparent var(--color-runtipi-red) transparent; 
         }
-        
+
         /* Specific positioning for FOOTER elements */
         .footer-link-group .icon-btn-gradient .tooltip {
             top: auto;
@@ -350,7 +362,23 @@
         .message-box.error { background-color: var(--color-error); }
         .message-box.success { background-color: var(--color-success); }
         .message-box.show { opacity: 1; display: block; }
-
+        
+        /* Custom Transition Utility for collapsible content */
+        .collapse-transition {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            overflow: hidden;
+            opacity: 1;
+            /* Added min-height to ensure it doesn't instantly collapse to 0 on open */
+            min-height: 0; 
+        }
+        .collapse-hidden {
+            max-height: 0 !important; /* Critical fix to force it closed */
+            opacity: 0;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
     </style>
 </head>
 <body class="min-h-screen antialiased">
@@ -594,34 +622,139 @@
                         <input type="url" id="config-source" class="app-input" value="" placeholder="e.g., https://github.com/my/app">
 
                         <!-- 14. website -->
-                        <label class="block text-sm font-medium">Website (Official Site URL)</label>
-                        <input type="url" id="config-website" class="app-input" value="" placeholder="e.g., https://www.nginx.com/">
+                        <label type="url" class="block text-sm font-medium">Website (Official Site URL)</label>
+                        <input type="text" id="config-website" class="app-input" value="" placeholder="e.g., https://www.nginx.com/">
                         
-                        <!-- 15. form_fields (JSON Array String) -->
-                        <label class="block text-sm font-medium mt-2">Form Fields (JSON Array String)</label>
-                        <textarea id="config-form_fields" rows="4" class="app-input resize-none font-mono text-xs" placeholder="[ { 'name': 'PORT', 'label': 'Container Port', 'default': '8080', 'type': 'number' } ]">[]</textarea>
+                        <!-- 15. form_fields (Interactive Builder - NOW CONSOLIDATED CHECKBOX ARRAYS) -->
+                        <div class="mb-4">
+                            <!-- Descriptive Text -->
+                            <p class="text-secondary-dark text-sm mb-3">
+                                Form Fields are for adding new user entries to the web UI when installing new apps, like a username, or a password.
+                                Click "New User Form Field" to add a new form field to your app, you can add as many as you like.
+                                these would be default admin username/passwords, database username/passwords or any type of environment variable
+                                that would require the user to enter when installing. 
+                            </p>
 
-                        <!-- 16. supported_architectures (CUSTOM CHECKBOXES) -->
+                            <!-- Consolidated Collapsible Toggle -->
+                            <button id="toggle-form-fields" class="w-full flex justify-between items-center py-3 px-4 bg-input-dark rounded-lg border border-dark transition hover:border-runtipi-red/50 focus:outline-none focus:ring-1 focus:ring-runtipi-red/80 mt-2 mb-4">
+                                <label class="text-sm font-medium cursor-pointer">
+                                    Config.json Form Field Selections
+                                </label>
+                                <i id="form-fields-icon" class="fas fa-chevron-right text-secondary-dark text-xs transition-transform duration-300"></i>
+                            </button>
+                            
+                            <!-- Consolidated Collapsible Content (Default: Hidden) -->
+                            <div id="form-fields-content" class="collapse-transition collapse-hidden bg-card-dark p-4 rounded-lg border border-dark">
+                                
+                                <!-- START Section 1: Form Fields (The 9 types) -->
+                                <div class="mb-6">
+                                    <h4 class="text-lg font-semibold mb-3 text-runtipi-red">Form Fields (Available Input Types)</h4>
+                                    <p class="text-secondary-dark text-sm mb-4">Select the valid input types available for variables.</p>
+                                    
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        <!-- Variable Types Checkboxes (9 items) -->
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_text" class="app-checkbox"><label for="type_text" class="ml-3 text-sm font-medium select-none">text</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_password" class="app-checkbox"><label for="type_password" class="ml-3 text-sm font-medium select-none">password</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_email" class="app-checkbox"><label for="type_email" class="ml-3 text-sm font-medium select-none">email</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_number" class="app-checkbox"><label for="type_number" class="ml-3 text-sm font-medium select-none">number</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_fqdn" class="app-checkbox"><label for="type_fqdn" class="ml-3 text-sm font-medium select-none">fqdn</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_ip" class="app-checkbox"><label for="type_ip" class="ml-3 text-sm font-medium select-none">ip</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_fqdnip" class="app-checkbox"><label for="type_fqdnip" class="ml-3 text-sm font-medium select-none">fqdnip</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_random" class="app-checkbox"><label for="type_random" class="ml-3 text-sm font-medium select-none">random</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="type_boolean" class="app-checkbox"><label for="type_boolean" class="ml-3 text-sm font-medium select-none">boolean</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- END Section 1: Form Fields -->
+
+                                <hr class="border-dark my-4">
+                                
+                                <!-- START Section 2: Form Field Properties (The 13 properties) -->
+                                <div>
+                                    <h4 class="text-lg font-semibold mb-3 text-runtipi-red">Form Field Properties</h4>
+                                    <p class="text-secondary-dark text-sm mb-4">These define the structure and validation of each input field in the Runtipi UI.</p>
+                                    
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                        <!-- Field Properties Checkboxes (13 items) -->
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_type" class="app-checkbox"><label for="prop_type" class="ml-3 text-sm font-medium select-none">type</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_label" class="app-checkbox"><label for="prop_label" class="ml-3 text-sm font-medium select-none">label</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_hint" class="app-checkbox"><label for="prop_hint" class="ml-3 text-sm font-medium select-none">hint</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_placeholder" class="app-checkbox"><label for="prop_placeholder" class="ml-3 text-sm font-medium select-none">placeholder</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_default" class="app-checkbox"><label for="prop_default" class="ml-3 text-sm font-medium select-none">default</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_regex" class="app-checkbox"><label for="prop_regex" class="ml-3 text-sm font-medium select-none">regex</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_pattern_error" class="app-checkbox"><label for="prop_pattern_error" class="ml-3 text-sm font-medium select-none">pattern error</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_min" class="app-checkbox"><label for="prop_min" class="ml-3 text-sm font-medium select-none">min</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_max" class="app-checkbox"><label for="prop_max" class="ml-3 text-sm font-medium select-none">max</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_required" class="app-checkbox"><label for="prop_required" class="ml-3 text-sm font-medium select-none">required</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_env_vars" class="app-checkbox"><label for="prop_env_vars" class="ml-3 text-sm font-medium select-none">environment variables</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_options" class="app-checkbox"><label for="prop_options" class="ml-3 text-sm font-medium select-none">options</label>
+                                        </div>
+                                        <div class="checkbox-container pt-0">
+                                            <input type="checkbox" id="prop_encoding" class="app-checkbox"><label for="prop_encoding" class="ml-3 text-sm font-medium select-none">encoding</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- END Section 2: Form Field Properties -->
+
+                            </div>
+                            <!-- END Consolidated Collapsible Content -->
+                        </div>
+
+                        <!-- 16. supported_architectures (NOW USING STANDARD CHECKBOXES) -->
                         <div class="block text-sm font-medium mb-2">Supported Architectures <span class="text-runtipi-red">*</span></div>
                         
                         <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-8">
                             
                             <!-- AMD64 Checkbox -->
-                            <div class="flex items-center space-x-2">
-                                <input type="checkbox" id="arch_amd64" class="hidden arch-checkbox" checked>
-                                <label for="arch_amd64" id="indicator_amd64" class="arch-indicator cursor-pointer flex items-center justify-center border w-5 h-5 rounded-sm transition-all duration-150 text-base">
-                                    <!-- Icon inserted by JavaScript -->
-                                </label>
-                                <label for="arch_amd64" class="text-sm font-medium select-none text-secondary-dark">amd64</label>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="arch_amd64" class="app-checkbox" checked>
+                                <label for="arch_amd64" class="ml-3 text-sm font-medium select-none">amd64</label>
                             </div>
 
                             <!-- ARM64 Checkbox -->
-                            <div class="flex items-center space-x-2">
-                                <input type="checkbox" id="arch_arm64" class="hidden arch-checkbox" checked>
-                                <label for="arch_arm64" id="indicator_arm64" class="arch-indicator cursor-pointer flex items-center justify-center border w-5 h-5 rounded-sm transition-all duration-150 text-base">
-                                    <!-- Icon inserted by JavaScript -->
-                                </label>
-                                <label for="arch_arm64" class="text-sm font-medium select-none text-secondary-dark">arm64</label>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="arch_arm64" class="app-checkbox" checked>
+                                <label for="arch_arm64" class="ml-3 text-sm font-medium select-none">arm64</label>
                             </div>
                         </div>
 
@@ -698,14 +831,18 @@
 
     <script>
         // Initialize Lucide icons
-        // This must be run on DOMContentLoaded or after the icons are added
         let lucideInitialized = false; 
 
         // --- Global State & Theme Logic ---
 
         const htmlElement = document.documentElement;
         // Global object to store parsed data across steps
-        let appData = {}; 
+        let appData = {
+            // NOTE: form_fields is initialized here for structure, but is NOT used by the current checkbox UI
+            config: {
+                form_fields: [] 
+            }
+        }; 
 
         /**
          * Updates the theme icon and the tooltip text based on the current theme.
@@ -730,6 +867,11 @@
                 } else {
                     heroTitle.classList.add('hero-title-shadow');
                 }
+            }
+            // Update the Tipi Logo base color based on theme
+            const tipiLogoBase = document.querySelector('svg path:nth-child(2)');
+            if (tipiLogoBase) {
+                tipiLogoBase.setAttribute('fill', theme === 'light' ? '#FFFFFF' : 'var(--bg-body)');
             }
         }
         
@@ -757,55 +899,6 @@
             window.scrollTo(0, 0); // Scroll to top on view change
         }
 
-        // --- Supported Architecture Checkbox Logic ---
-
-        /**
-         * Updates the visual indicator for a given architecture checkbox
-         * based on its checked state, displaying a checkmark or a red X.
-         * @param {HTMLInputElement} checkbox The native checkbox element.
-         */
-        function updateArchitectureIndicator(checkbox) {
-            const indicatorId = 'indicator_' + checkbox.id.replace('arch_', '');
-            const indicator = document.getElementById(indicatorId);
-            
-            if (!indicator) return;
-
-            // Clear previous content
-            indicator.innerHTML = '';
-
-            if (checkbox.checked) {
-                // State ON: Display blue checkmark (to match the aesthetic theme)
-                // Classes are primarily controlled by CSS, but we insert the icon SVG here.
-                // The CSS controls the color transition.
-                indicator.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>';
-                
-            } else {
-                // State OFF: Display red 'X' 
-                // The CSS controls the red color and background color to match the card/input.
-                indicator.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
-            }
-        }
-        
-        /**
-         * Initializes and sets up event listeners for the architecture checkboxes.
-         */
-        function setupArchitectureCheckboxes() {
-            const archCheckboxes = document.querySelectorAll('.arch-checkbox');
-            archCheckboxes.forEach(checkbox => {
-                // Initial render
-                updateArchitectureIndicator(checkbox);
-                
-                // Listen for changes
-                checkbox.addEventListener('change', () => {
-                    updateArchitectureIndicator(checkbox);
-                    // Also trigger the main JSON output update
-                    updateConfigJsonOutput(); 
-                });
-            });
-            // Run the initial indicator update on the first render for all
-            archCheckboxes.forEach(updateArchitectureIndicator);
-        }
-
         /**
          * Switches between the generator steps and handles auto-filling.
          * @param {number} stepNumber - 1 or 2.
@@ -829,9 +922,6 @@
                 // Ensure the Tipi Version is explicitly set to 3 as default
                 document.getElementById('config-tipi_version').value = 3;
                 
-                // Initialize the architecture checkboxes visuals and listeners
-                setupArchitectureCheckboxes();
-
                 updateConfigJsonOutput();
             }
 
@@ -947,7 +1037,50 @@
             }
         }
         
-        // --- Step 2: Config.json Logic ---
+        // --- Step 2: Form Fields Collapsible Logic (FIXED & CONSOLIDATED) ---
+
+        /**
+         * Toggles a collapsible content area and its associated icon.
+         * @param {HTMLElement} content - The content container element.
+         * @param {HTMLElement} icon - The icon element.
+         */
+        function toggleCollapsible(content, icon) {
+            // Check if it's currently hidden
+            const isHidden = content.classList.contains('collapse-hidden');
+
+            if (isHidden) {
+                // Show content
+                content.classList.remove('collapse-hidden');
+                // Use setTimeout to ensure the element is visible before calculating scrollHeight
+                setTimeout(() => {
+                    // Set height to scrollHeight (this is the key fix)
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }, 10); // Small delay
+                icon.classList.replace('fa-chevron-right', 'fa-chevron-down');
+            } else {
+                // Hide content
+                // 1. Set explicit height (to transition from)
+                content.style.maxHeight = content.scrollHeight + "px"; 
+                // 2. Schedule the transition to zero height and collapse-hidden class
+                setTimeout(() => {
+                    content.style.maxHeight = "0"; // Start transition to 0
+                    // After the transition finishes (300ms defined in CSS), the class will hide overflow/padding
+                    setTimeout(() => content.classList.add('collapse-hidden'), 300);
+                }, 10);
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-right');
+            }
+        }
+        
+        /**
+         * Toggles the main Form Fields content area and rotates the icon.
+         */
+        function toggleFormFieldsContent() {
+            const content = document.getElementById('form-fields-content');
+            const icon = document.getElementById('form-fields-icon');
+            toggleCollapsible(content, icon);
+        }
+
+        // --- Step 2: Config.json Logic (Updated) ---
 
         /**
          * Collects data from the form and generates the config.json object.
@@ -955,31 +1088,16 @@
         function getConfigJsonData() {
             const now = Date.now();
             
-            // Helper function for comma-separated string to array (NOT USED for architectures anymore)
+            // Helper function for comma-separated string to array
             const toArray = (value) => {
                 if (typeof value !== 'string') return [];
                 return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
             };
 
-            // Helper function for safe JSON parsing
-            const parseJsonArray = (value) => {
-                if (!value || value.trim() === '[]') return [];
-                try {
-                    const cleanedValue = value.trim().replace(/'/g, '"');
-                    return JSON.parse(cleanedValue);
-                } catch (e) {
-                    return []; 
-                }
-            };
-            
-            // Collect supported architectures from checkboxes
-            const supportedArchitectures = [];
-            if (document.getElementById('arch_amd64')?.checked) {
-                supportedArchitectures.push('amd64');
-            }
-            if (document.getElementById('arch_arm64')?.checked) {
-                supportedArchitectures.push('arm64');
-            }
+            // NOTE: Since the dynamic field editor is replaced by checkboxes, 
+            // we will use the empty form_fields array stored in appData for now.
+            const finalFormFields = appData.config.form_fields;
+
 
             const data = {
                 // 1. name (string)
@@ -1024,14 +1142,19 @@
                 // 14. website (string - url)
                 website: document.getElementById('config-website').value.trim(),
                 
-                // 15. form_fields (array of objects - from JSON string)
-                form_fields: parseJsonArray(document.getElementById('config-form_fields').value),
+                // 15. form_fields (array of objects - currently an empty array)
+                form_fields: finalFormFields,
 
                 // 16. supported_architectures (array of strings - from checkboxes)
-                supported_architectures: supportedArchitectures,
+                supported_architectures: (function() {
+                    const archs = [];
+                    if (document.getElementById('arch_amd64')?.checked) archs.push('amd64');
+                    if (document.getElementById('arch_arm64')?.checked) archs.push('arm64');
+                    return archs;
+                })(),
                 
                 // 17. created_at (auto-generated timestamp) - Keep previous timestamp if it exists
-                created_at: appData.config?.created_at || Math.floor(now / 1000), // Unix timestamp in seconds
+                created_at: appData.config.created_at || Math.floor(now / 1000), // Unix timestamp in seconds
                 
                 // 18. updated_at (auto-generated timestamp)
                 updated_at: Math.floor(now / 1000), // Unix timestamp in seconds
@@ -1044,7 +1167,6 @@
 
         /**
          * Generates the config.json output and displays it in the textarea.
-         * Now includes custom formatting to put 'supported_architectures' on a single line.
          */
         function updateConfigJsonOutput() {
             const data = getConfigJsonData();
@@ -1054,28 +1176,22 @@
             let jsonString = JSON.stringify(data, null, 2);
 
             // 2. Use regex to find and squash the supported_architectures array into a single line
-            // Regex Explanation:
-            // ("supported_architectures":\s*\[): Group 1 captures the key and opening bracket
-            // [\s\S]*?): Group 2 captures the contents (including newlines and indentation) non-greedily
-            // (\s*\]): Match the closing bracket
             const archRegex = /("supported_architectures":\s*\[)\s*([\s\S]*?)\s*\]/m;
 
             jsonString = jsonString.replace(archRegex, (match, p1, p2) => {
-                // p1: '"supported_architectures": ['
-                // p2: The contents, e.g., '  "amd64",\n    "arm64"\n  '
-                
-                // Clean up the contents: 
-                // a) Replace the comma + newline + indentation pattern with ", " 
-                // b) Remove any remaining extraneous newlines/spaces
                 let cleanedContent = p2.replace(/,\s*\n\s*/g, ', ') 
                                        .replace(/\s*\n\s*/g, '') 
                                        .trim();
 
-                // Reconstruct the line as inline:
                 return `${p1}${cleanedContent}]`;
             });
 
-            // 3. Update the textarea
+            // 3. Squashing empty form_fields array onto a single line
+            const emptyFormFieldsRegex = /("form_fields":\s*\[)\s*\]/m;
+            jsonString = jsonString.replace(emptyFormFieldsRegex, (match, p1) => `${p1}]`);
+
+
+            // 4. Update the textarea
             outputTextarea.value = jsonString;
         }
 
@@ -1089,6 +1205,9 @@
             const inputYamlBtn = document.getElementById('input-yaml-btn');
             const gotoYamlBtn = document.getElementById('goto-yaml-btn'); 
             const composeJsonBtn = document.getElementById('compose-json-btn');
+            
+            // New Consolidated Form Field Toggle
+            const toggleFormFieldsBtn = document.getElementById('toggle-form-fields');
 
             // --- Theme Initialization ---
             const currentTheme = localStorage.getItem('theme') || 'dark';
@@ -1123,18 +1242,29 @@
                     // Final update before moving on
                     updateConfigJsonOutput(); 
                     
-                    showMessage('success', "Config.json data saved! Ready for Step 3: Docker-Compose.json generation (Feature to be implemented).");
+                    showMessage('success', "Config.json data saved! Ready for the next step.");
                     // You would implement goToStep(3) here once it exists
                 });
             }
 
-            // --- Real-time Input Listeners for Step 2 Form ---
+            // --- Form Field Editor Setup (Consolidated) ---
+            if (toggleFormFieldsBtn) {
+                toggleFormFieldsBtn.addEventListener('click', toggleFormFieldsContent);
+            }
+
+            // Initial state: ensure it is hidden on load
+            const formFieldsContent = document.getElementById('form-fields-content');
+            if (formFieldsContent) formFieldsContent.classList.add('collapse-hidden');
+            
+            // Initial icon state: set to right arrow
+            const formFieldsIcon = document.getElementById('form-fields-icon');
+            if (formFieldsIcon) formFieldsIcon.classList.replace('fa-chevron-down', 'fa-chevron-right');
+            
+            
+            // --- Real-time Input Listeners for Step 2 Form (Other fields) ---
             const configForm = document.getElementById('config-json-form');
             if (configForm) {
-                // Use delegation to catch all input and change events on the form fields, 
-                // excluding the architecture fields which have their own listener setup.
-                // We listen to the arch checkboxes here just in case the setupArchitectureCheckboxes 
-                // hasn't run yet, but the dedicated listener is safer for visuals.
+                // Use delegation for all inputs/changes on the main form
                 configForm.addEventListener('input', updateConfigJsonOutput);
                 configForm.addEventListener('change', updateConfigJsonOutput); 
             }
