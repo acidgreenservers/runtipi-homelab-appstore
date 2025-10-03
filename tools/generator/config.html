@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configure config.json - Runtipi Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --bg-body: #131313;
+            --bg-container: #181818;
+            --bg-card: #1F1F1F;
+            --bg-input: #2D2D2D;
+            --color-text-primary: #E2E8F0;
+            --color-text-secondary: #94A3B8;
+            --color-border: #2D2D2D;
+            --color-runtipi-red: #FF66A3;
+            --color-runtipi-blue: #6495ED;
+        }
+        html[data-theme='light'] {
+            --bg-body: #F7F7F7;
+            --bg-container: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --bg-input: #E5E7EB;
+            --color-text-primary: #1F2937;
+            --color-text-secondary: #6B7280;
+            --color-border: #E5E7EB;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--color-text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .header-border { border-color: var(--color-border); }
+        .bg-card-dark { background-color: var(--bg-card); }
+        .border-dark { border-color: var(--color-border); }
+        .text-secondary-dark { color: var(--color-text-secondary); }
+        .bg-input-dark { background-color: var(--bg-input); }
+        .text-gradient {
+            background-image: linear-gradient(to right, var(--color-runtipi-red), var(--color-runtipi-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-cta {
+            background-color: #131313;
+            border: 1px solid #555555;
+            color: #FFFFFF;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-cta:hover {
+            background-color: #000000;
+            border-color: var(--color-runtipi-red);
+            transform: scale(1.02);
+        }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            border-color: var(--color-runtipi-blue);
+        }
+        .app-input, .app-select {
+            background-color: var(--bg-input);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            width: 100%;
+        }
+        .app-input:focus, .app-select:focus {
+            outline: none;
+            border-color: var(--color-runtipi-red);
+        }
+        .app-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            padding-top: 0.5rem;
+        }
+        .form-field-card {
+            background: var(--bg-input);
+            border: 1px solid var(--color-border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            border-color: var(--color-runtipi-red);
+            transform: translateY(-2px);
+        }
+        .collapse-transition {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .collapse-hidden {
+            max-height: 0 !important;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="min-h-screen antialiased">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <header class="flex justify-between items-center py-6 header-border border-b">
+            <a href="index.html" class="text-2xl font-bold flex items-center transition duration-200 hover:opacity-85">
+                <svg width="28" height="28" viewBox="0 0 30 30" fill="none" class="mr-3" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 4L27 26H3L15 4Z" fill="#F4511E"/>
+                    <path d="M15 7L24 24H6L15 7Z" fill="var(--bg-body)"/>
+                    <path d="M15 4L27 26" stroke="#FF66A3" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M3 26L15 4" stroke="#FF66A3" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="10" y1="12" x2="20" y2="12" stroke="#FFD180" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="8" y1="18" x2="22" y2="18" stroke="#FFD180" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="6" y1="24" x2="24" y2="24" stroke="#FFD180" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                TipiGenerator
+            </a>
+            <button id="theme-toggle" class="p-2 text-xl rounded-full w-10 h-10 flex items-center justify-center">
+                <span id="theme-icon">🌙</span>
+            </button>
+        </header>
+        <section class="py-16 text-center border-b border-dark">
+            <h2 class="mb-12" style="line-height: 1.2;">
+                <span class="text-gradient text-5xl font-extrabold tracking-tight inline-block">Powerful. Simple. Generator.</span>
+            </h2>
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="bg-card-dark p-6 rounded-xl border-dark border feature-card">
+                    <div style="color: var(--color-runtipi-red);" class="text-3xl mb-4">✍️</div>
+                    <h3 class="text-xl font-semibold mb-3">Compose File Parsing</h3>
+                    <p class="text-secondary-dark">Automatically analyze your standard Docker Compose YAML to extract necessary configuration variables and settings.</p>
+                </div>
+                <div class="bg-card-dark p-6 rounded-xl border-dark border feature-card">
+                    <div style="color: var(--color-runtipi-red);" class="text-3xl mb-4">📐</div>
+                    <h3 class="text-xl font-semibold mb-3">Runtipi Schema Mapping</h3>
+                    <p class="text-secondary-dark">Map your application's parameters directly to the Runtipi format, ensuring seamless integration with your custom AppStore.</p>
+                </div>
+                <div class="bg-card-dark p-6 rounded-xl border-dark border feature-card">
+                    <div style="color: var(--color-runtipi-red);" class="text-3xl mb-4">⬇️</div>
+                    <h3 class="text-xl font-semibold mb-3">Instant Zip Packaging</h3>
+                    <p class="text-secondary-dark">Generate a single, complete ZIP file containing all required metadata and configurations, ready for immediate upload.</p>
+                </div>
+            </div>
+        </section>
+        <div class="py-12">
+            <h2 class="text-4xl font-extrabold text-center mb-10">
+                <span class="text-gradient">Step 2: Config.json Configuration</span>
+            </h2>
+            <h3 class="text-xl font-semibold text-center text-secondary-dark mb-8">
+                Fill in the metadata fields for the Runtipi config.json file.
+            </h3>
+            <div class="bg-card-dark p-6 rounded-xl border-dark border">
+                <h3 class="text-xl font-semibold mb-4" style="color: var(--color-runtipi-red);">Application Metadata</h3>
+                <div id="config-json-form" class="grid grid-cols-1 gap-x-6 gap-y-4 mb-8">
+                    <label class="block text-sm font-medium">Name <span style="color: var(--color-runtipi-red);">*</span></label>
+                    <input type="text" id="config-name" class="app-input" placeholder="e.g., Nginx">
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="config-available" class="app-checkbox" checked>
+                        <label for="config-available" class="ml-3 text-sm font-medium">Available</label>
+                    </div>
+                    <label class="block text-sm font-medium">Port</label>
+                    <input type="number" id="config-port" class="app-input" placeholder="e.g., 8754">
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="config-exposable" class="app-checkbox" checked>
+                        <label for="config-exposable" class="ml-3 text-sm font-medium">Exposable</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="config-dynamic_config" class="app-checkbox" checked>
+                        <label for="config-dynamic_config" class="ml-3 text-sm font-medium">Dynamic Config</label>
+                    </div>
+                    <label class="block text-sm font-medium">ID <span style="color: var(--color-runtipi-red);">*</span></label>
+                    <input type="text" id="config-id" class="app-input" placeholder="e.g., nginx">
+                    <label class="block text-sm font-medium">Description</label>
+                    <textarea id="config-description" rows="3" class="app-input resize-none"></textarea>
+                    <label class="block text-sm font-medium">Tipi Version <span style="color: var(--color-runtipi-red);">*</span></label>
+                    <input type="number" id="config-tipi_version" class="app-input" value="3">
+                    <label class="block text-sm font-medium">Version <span style="color: var(--color-runtipi-red);">*</span></label>
+                    <input type="text" id="config-version" class="app-input" placeholder="e.g., 1.25.3">
+                    <label class="block text-sm font-medium">Categories</label>
+                    <input type="text" id="config-categories" class="app-input" placeholder="utilities, media">
+                    <label class="block text-sm font-medium">Short Description</label>
+                    <input type="text" id="config-short_desc" class="app-input">
+                    <label class="block text-sm font-medium">Author</label>
+                    <input type="text" id="config-author" class="app-input">
+                    <label class="block text-sm font-medium">Source</label>
+                    <input type="url" id="config-source" class="app-input">
+                    <label class="block text-sm font-medium">Website</label>
+                    <input type="url" id="config-website" class="app-input">
+                <div class="mb-4">
+                    <p class="text-secondary-dark text-sm mb-3">
+                        Form Fields: For adding new forms to the web UI when installing new apps
+                    </p>
+                    </button>
+                <div class="mt-4">
+                    <h3 class="text-xl font-semibold mb-4" style="color: var(--color-runtipi-red);">Custom Form Fields</h3>
+                    <div class="flex justify-between items-center mb-4 border-b border-dark pb-3">
+                        <p class="text-secondary-dark text-sm">Create and configure form fields below</p>
+                        <button id="new-form-field-btn" class="btn-secondary text-sm font-semibold py-2 px-4 rounded-lg">
+                            <i class="fas fa-plus mr-1"></i> New Form Field
+                        </button>
+                    </div>
+                    <div id="form-field-entries" class="space-y-4"></div>
+                </div>
+                <div class="block text-sm font-medium mb-2 mt-4">Supported Architectures <span style="color: var(--color-runtipi-red);">*</span></div>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-8">
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="arch_amd64" class="app-checkbox" checked>
+                        <label for="arch_amd64" class="ml-3 text-sm font-medium select-none">amd64</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="arch_arm64" class="app-checkbox" checked>
+                        <label for="arch_arm64" class="ml-3 text-sm font-medium select-none">arm64</label>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-xl font-semibold mb-4 mt-8" style="color: var(--color-runtipi-blue);">Generated config.json</h3>
+            <textarea id="json-output" rows="20" readonly class="w-full bg-input-dark p-3 rounded-lg border border-dark text-sm resize-none font-mono"></textarea>
+        </div>
+        <div class="flex justify-between space-x-4 mt-8">
+            <button id="goto-yaml-btn" class="btn-secondary text-lg font-semibold py-4 px-12 rounded-lg w-1/2">
+                <i class="fas fa-arrow-left mr-2"></i> Back
+            </button>
+            <button id="download-btn" class="btn-cta text-lg font-semibold py-4 px-12 rounded-lg w-1/2">
+                <i class="fas fa-download mr-2"></i> Download
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+    const htmlElement = document.documentElement;
+    let field_id_counter = 0;
+    
+    const OPTIONAL_PROPERTIES = [
+        "hint", "placeholder", "default", "regex", "pattern_error", "min", "max", "options", "encoding"
+    ];
+    
+    const PROPERTY_DEFINITIONS = {
+        hint: ['text', 'e.g., Used for login.', 'Help text displayed below the field', 'text'],
+        placeholder: ['text', 'e.g., Enter your secret here', 'Ghost text inside the input', 'text'],
+        default: ['text', 'e.g., root', 'Pre-filled value', 'text'],
+        regex: ['text', 'e.g., ^[a-z0-9]+$', 'Regex pattern for validation', 'text'],
+        pattern_error: ['text', 'e.g., Must be lowercase letters only', 'Error message on regex failure', 'text'],
+        min: ['number', 'e.g., 3', 'Minimum length or value', 'number'],
+        max: ['number', 'e.g., 50', 'Maximum length or value', 'number'],
+        options: ['textarea', 'Option 1, Option 2 (comma separated)', 'Available options for dropdowns', ''],
+        encoding: ['text', 'e.g., utf-8', 'Character encoding', 'text']
+    };
+    
+    const FORM_TYPES = [
+        "text", "password", "email", "number", "fqdn", "ip", 
+        "fqdnip", "random", "boolean"
+    ];
+    
+    function updateThemeContent(theme) {
+        const icon = document.getElementById('theme-icon');
+        if (icon) icon.textContent = theme === 'light' ? '🌙' : '☀️';
+    }
+    
+    function toggleTheme() {
+        const oldTheme = htmlElement.getAttribute('data-theme');
+        const newTheme = oldTheme === 'dark' ? 'light' : 'dark';
+        htmlElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeContent(newTheme);
+    }
+    
+    function toggleCollapsible(content, icon) {
+        const isHidden = content.classList.contains('collapse-hidden');
+        if (isHidden) {
+            content.classList.remove('collapse-hidden');
+            content.style.maxHeight = content.scrollHeight + "px";
+            icon.classList.replace('fa-chevron-right', 'fa-chevron-down');
+        } else {
+            content.style.maxHeight = "0";
+            setTimeout(() => content.classList.add('collapse-hidden'), 300);
+            icon.classList.replace('fa-chevron-down', 'fa-chevron-right');
+        }
+    }
+    
+    function addNewFormField(initialValues = {}) {
+        field_id_counter++;
+        const id = field_id_counter;
+        const container = document.getElementById('form-field-entries');
+        
+        const initialLabel = initialValues.label || `Field #${id}`;
+        const currentType = initialValues.type || 'text';
+        const currentRequired = initialValues.required === true;
+        const currentEnv = initialValues.env_variable || '';
+        
+        const typeOptions = FORM_TYPES.map(type => 
+            `<option value="${type}" ${type === currentType ? 'selected' : ''}>${type}</option>`
+        ).join('');
+        
+        const cardHtml = `
+            <div class="form-field-card" data-field-id="${id}">
+                <div class="flex justify-between items-center mb-2 pb-2 border-b border-dark/50">
+                    <h5 class="text-sm font-bold" style="color: var(--color-runtipi-blue);">Form Field #${id} - <span id="field-${id}-title">${initialLabel}</span></h5>
+                    <button onclick="removeFormField(${id})" class="text-red-500 hover:text-red-400 transition">
+                        <i class="fas fa-trash-alt text-base"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 pb-4 mb-4 border-b border-dark/50">
+                    <div class="mb-3 col-span-full">
+                        <div class="checkbox-container pt-0">
+                            <input type="checkbox" id="field-${id}-required" data-field-key="required" class="app-checkbox" ${currentRequired ? 'checked' : ''}>
+                            <label for="field-${id}-required" class="ml-3 text-sm font-medium select-none" style="color: var(--color-runtipi-red);">Required</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="field-${id}-type" class="block text-xs font-medium text-secondary-dark mb-1">Type <span style="color: var(--color-runtipi-red);">*</span></label>
+                        <select id="field-${id}-type" data-field-key="type" class="app-select w-full text-sm">
+                            ${typeOptions}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="field-${id}-label" class="block text-xs font-medium text-secondary-dark mb-1">Label <span style="color: var(--color-runtipi-red);">*</span></label>
+                        <input type="text" id="field-${id}-label" data-field-key="label" value="${initialValues.label || ''}" class="app-input w-full text-sm" placeholder="e.g., Database Password">
+                    </div>
+                    <div class="mb-3 col-span-full">
+                        <label for="field-${id}-env_variable" class="block text-xs font-medium text-secondary-dark mb-1">Environment Variable <span style="color: var(--color-runtipi-red);">*</span></label>
+                        <input type="text" id="field-${id}-env_variable" data-field-key="env_variable" value="${currentEnv}" class="app-input w-full text-sm" placeholder="e.g., DB_PASSWORD">
+                    </div>
+                </div>
+                <div id="field-optional-container-${id}" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <select id="property-select-${id}" class="app-select text-sm flex-1">
+                        <option value="">-- Select Property --</option>
+                        <option value="hint">hint</option>
+                        <option value="placeholder">placeholder</option>
+                        <option value="default">default</option>
+                        <option value="regex">regex</option>
+                        <option value="pattern_error">pattern_error</option>
+                        <option value="min">min</option>
+                        <option value="max">max</option>
+                        <option value="options">options</option>
+                        <option value="encoding">encoding</option>
+                    </select>
+                    <button onclick="addPropertyToField(${id})" class="btn-secondary text-sm px-4">
+                        <i class="fas fa-plus mr-1"></i> Add
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', cardHtml);
+        
+        const card = container.querySelector(`[data-field-id="${id}"]`);
+        card.querySelectorAll('[data-field-key]').forEach(input => {
+            input.addEventListener(input.type === 'checkbox' || input.tagName === 'SELECT' ? 'change' : 'input', updateConfigJsonOutput);
+            if (input.dataset.fieldKey === 'label') {
+                input.addEventListener('input', (e) => {
+                    document.getElementById(`field-${id}-title`).textContent = e.target.value || `Field #${id}`;
+                });
+            }
+        });
+        
+        updateConfigJsonOutput();
+    }
+    
+    function removeFormField(id) {
+        const card = document.querySelector(`.form-field-card[data-field-id="${id}"]`);
+        if (card) {
+            card.remove();
+            updateConfigJsonOutput();
+        }
+    }
+    
+    function addPropertyToField(fieldId) {
+        const optionalContainer = document.getElementById(`field-optional-container-${fieldId}`);
+        const selectElement = document.getElementById(`property-select-${fieldId}`);
+        const propKey = selectElement.value;
+        
+        if (!propKey) {
+            alert('Please select a property from the dropdown first');
+            return;
+        }
+        const def = PROPERTY_DEFINITIONS[propKey];
+        const propertyId = `field-${fieldId}-${propKey}-${Date.now()}`;
+        
+        let inputHtml = '';
+        if (def[0] === 'textarea') {
+            inputHtml = `
+                <div class="mb-3 col-span-full">
+                    <label for="${propertyId}" class="block text-xs font-medium text-secondary-dark mb-1">${propKey}</label>
+                    <textarea id="${propertyId}" data-field-key="${propKey}" rows="2" class="app-input w-full text-sm resize-none" placeholder="${def[1]}"></textarea>
+                    <button onclick="this.parentElement.remove(); updateConfigJsonOutput();" class="text-red-400 text-xs mt-1">Remove</button>
+                </div>
+            `;
+        } else {
+            inputHtml = `
+                <div class="mb-3">
+                    <label for="${propertyId}" class="block text-xs font-medium text-secondary-dark mb-1">${propKey}</label>
+                    <input type="${def[3]}" id="${propertyId}" data-field-key="${propKey}" class="app-input w-full text-sm" placeholder="${def[1]}">
+                    <button onclick="this.parentElement.remove(); updateConfigJsonOutput();" class="text-red-400 text-xs mt-1">Remove</button>
+                </div>
+            `;
+        }
+        
+        optionalContainer.insertAdjacentHTML('beforeend', inputHtml);
+        
+        optionalContainer.querySelectorAll(`[data-field-key="${propKey}"]`).forEach(input => {
+            input.addEventListener(input.type === 'checkbox' ? 'change' : 'input', updateConfigJsonOutput);
+        });
+        
+        updateConfigJsonOutput();
+    }
+    function readDynamicFormFields() {
+        const fields = [];
+
+        document.querySelectorAll('#form-field-entries .form-field-card').forEach(card => {
+            const fieldObject = {};
+
+            // Grab inputs by data-field-key
+            const typeInput = card.querySelector('[data-field-key="type"]');
+            const labelInput = card.querySelector('[data-field-key="label"]');
+            const maxInput = card.querySelector('[data-field-key="max"]');
+            const minInput = card.querySelector('[data-field-key="min"]');
+            const requiredInput = card.querySelector('[data-field-key="required"]');
+            const envVarInput = card.querySelector('[data-field-key="env_variable"]');
+
+            // Validate required fields
+            if (!typeInput?.value.trim() || !labelInput?.value.trim() || !envVarInput?.value.trim()) {
+                // Skip this field if required fields missing
+                return;
+            }
+
+            // Assign keys in exact order
+            fieldObject.type = typeInput.value.trim();
+            fieldObject.label = labelInput.value.trim();
+
+            // max and min are optional numbers
+            const maxVal = maxInput?.value.trim();
+            if (maxVal !== '' && !isNaN(maxVal)) {
+                fieldObject.max = Number(maxVal);
+            }
+
+            const minVal = minInput?.value.trim();
+            if (minVal !== '' && !isNaN(minVal)) {
+                fieldObject.min = Number(minVal);
+            }
+
+            // required is boolean, default false if unchecked
+            fieldObject.required = requiredInput?.checked === true;
+
+            fieldObject.env_variable = envVarInput.value.trim();
+
+            fields.push(fieldObject);
+        });
+
+        return fields;
+    }
+    
+    function updateConfigJsonOutput() {
+        const now = Date.now();
+        const toArray = (value) => {
+            if (typeof value !== 'string') return [];
+            return value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        };
+        
+        const configuredFormFields = readDynamicFormFields();
+        const rawPort = document.getElementById('config-port').value;
+        const portValue = rawPort ? parseInt(rawPort, 10) : null;
+        
+        const data = {
+            name: document.getElementById('config-name').value.trim() || "",
+            available: document.getElementById('config-available').checked,
+            port: portValue,
+            exposable: document.getElementById('config-exposable').checked,
+            dynamic_config: document.getElementById('config-dynamic_config').checked,
+            id: document.getElementById('config-id').value.trim() || "",
+            description: document.getElementById('config-description').value.trim(),
+            tipi_version: parseInt(document.getElementById('config-tipi_version').value, 10) || 3,
+            version: document.getElementById('config-version').value.trim() || "",
+            categories: toArray(document.getElementById('config-categories').value),
+            short_desc: document.getElementById('config-short_desc').value.trim(),
+            author: document.getElementById('config-author').value.trim(),
+            source: document.getElementById('config-source').value.trim(),
+            website: document.getElementById('config-website').value.trim(),
+            form_fields: configuredFormFields,
+            supported_architectures: (() => {
+                const archs = [];
+                if (document.getElementById('arch_amd64')?.checked) archs.push('amd64');
+                if (document.getElementById('arch_arm64')?.checked) archs.push('arm64');
+                return archs;
+            })(),
+            created_at: Math.floor(now / 1000),
+            updated_at: Math.floor(now / 1000),
+        };
+        
+        if (data.port === null) delete data.port;
+        
+        let jsonString = JSON.stringify(data, null, 2);
+        const archRegex = /("supported_architectures":\s*\$)\s*([\s\S]*?)\s*\$/m;
+        jsonString = jsonString.replace(archRegex, (match, p1, p2) => {
+            let cleanedContent = p2.replace(/,\s*\n\s*/g, ', ').replace(/\s*\n\s*/g, '').trim();
+            return `${p1}${cleanedContent}]`;
+        });
+        
+        if (data.form_fields.length === 0) {
+            const emptyFormFieldsRegex = /("form_fields":\s*\$)\s*\$/m;
+            jsonString = jsonString.replace(emptyFormFieldsRegex, (match, p1) => `${p1}]`);
+        } else {
+            const formFieldsRegex = /("form_fields":\s*\$)([\s\S]*?)(\s*\$)/m;
+            jsonString = jsonString.replace(formFieldsRegex, (match, p1) => {
+                const fieldsArrayString = JSON.stringify(data.form_fields, null, 4);
+                let innerContent = fieldsArrayString.substring(1, fieldsArrayString.length - 1).trim();
+                innerContent = innerContent.split('\n').map(line => `  ${line}`).join('\n');
+                return `${p1}\n${innerContent}\n  ]`;
+            });
+        }
+        
+        document.getElementById('json-output').value = jsonString;
+        localStorage.setItem('configJson', jsonString);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        htmlElement.setAttribute('data-theme', currentTheme);
+        updateThemeContent(currentTheme);
+        
+        const toggleButton = document.getElementById('theme-toggle');
+        if (toggleButton) toggleButton.addEventListener('click', toggleTheme);
+        
+        const toggleFormFieldsBtn = document.getElementById('toggle-form-fields');
+        if (toggleFormFieldsBtn) {
+            toggleFormFieldsBtn.addEventListener('click', () => {
+                toggleCollapsible(
+                    document.getElementById('form-fields-content'),
+                    document.getElementById('form-fields-icon')
+                );
+            });
+        }
+        
+        document.getElementById('new-form-field-btn').addEventListener('click', () => addNewFormField());
+
+        const card = container.querySelector(`[data-field-id="${id}"]`);
+        card.querySelectorAll('[data-field-key]').forEach(input => {
+            const eventType = (input.type === 'checkbox' || input.tagName === 'SELECT') ? 'change' : 'input';
+            input.addEventListener(eventType, updateConfigJsonOutput);
+        });
+
+        
+        const parsed = localStorage.getItem('parsedCompose');
+        if (parsed) {
+            const data = JSON.parse(parsed);
+            if (data.suggestions) {
+                document.getElementById('config-name').value = data.suggestions.name || '';
+                document.getElementById('config-id').value = data.suggestions.id || '';
+                document.getElementById('config-port').value = data.suggestions.port || '';
+            }
+        }
+        
+        document.getElementById('goto-yaml-btn').addEventListener('click', () => {
+            window.location.href = 'generator.html';
+        });
+        
+        document.getElementById('download-btn').addEventListener('click', () => {
+            alert('Download functionality coming in next step!');
+        });
+        
+        updateConfigJsonOutput();
+    });
+</script>

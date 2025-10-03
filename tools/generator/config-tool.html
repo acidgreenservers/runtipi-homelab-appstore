@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runtipi Config Suite</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Inter font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Load Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Load YAML Parser (js-yaml) for Config Tool and Server Config -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <!-- Load JSZip for App Generator file bundling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <style>
+        /* --- Base Theme (DARK) --- */
+        :root {
+            /* General */
+            --bg-body: #131313;
+            --bg-container: #181818;
+            --bg-card: #1F1F1F;
+            --bg-input: #2D2D2D;
+            --color-text-primary: #E2E8F0;
+            --color-text-secondary: #94A3B8;
+            --color-border: #2D2D2D;
+            /* Accents */
+            --color-runtipi-red: #FF66A3;
+            --color-runtipi-red-hover: #E85B95;
+            /* Scrollbar */
+            --scrollbar-thumb: #475569;
+            --scrollbar-track: #1F1F1F;
+        }
+
+        /* --- Light Theme Overrides --- */
+        [data-theme='light'] {
+            --bg-body: #F1F5F9;
+            --bg-container: #FFFFFF;
+            --bg-card: #E2E8F0;
+            --bg-input: #FFFFFF;
+            --color-text-primary: #1E293B;
+            --color-text-secondary: #475569;
+            --color-border: #CBD5E1;
+            /* Scrollbar */
+            --scrollbar-thumb: #94A3B8;
+            --scrollbar-track: #F1F5F9;
+        }
+
+        /* Apply variables */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--color-text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Custom Scrollbar for Textareas */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: var(--color-runtipi-red);
+        }
+
+        /* Utility class to match background style */
+        .bg-card {
+            background-color: var(--bg-card);
+        }
+        .bg-input {
+            background-color: var(--bg-input);
+        }
+        .text-runtipi-red {
+            color: var(--color-runtipi-red);
+        }
+        .hover\:bg-runtipi-red-hover:hover {
+            background-color: var(--color-runtipi-red-hover);
+        }
+        .nav-button {
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .button-style {
+             padding: 8px 16px;
+             border-radius: 8px;
+             font-weight: 600;
+             transition: all 0.2s;
+             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header & Navigation -->
+    <header class="sticky top-0 z-10 backdrop-blur-sm shadow-xl" style="background-color: var(--bg-body); border-bottom: 1px solid var(--color-border);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <a href="#landing" id="logo-link" onclick="showView('landing'); return false;" class="flex items-center space-x-2 cursor-pointer transition transform hover:scale-[1.02]">
+                <i class="fa-solid fa-code text-3xl text-runtipi-red"></i>
+                <span class="text-2xl font-bold">Runtipi Config Suite</span>
+            </a>
+
+            <nav class="flex space-x-4 text-sm font-medium">
+                <button onclick="showView('appGenerator');" id="nav-appGenerator" class="nav-button">App Generator</button>
+                <button onclick="showView('serverConfigurator');" id="nav-serverConfigurator" class="nav-button">Server Config</button>
+                <button onclick="showView('configTool');" id="nav-configTool" class="nav-button">Config Tool</button>
+                <!-- NEW NAVIGATION BUTTON -->
+                <button onclick="showView('variableReference');" id="nav-variableReference" class="nav-button">Variable Reference</button>
+            </nav>
+
+            <button id="theme-toggle" class="p-2 rounded-full transition duration-150 ease-in-out text-xl hover:bg-gray-700/50" style="color: var(--color-text-primary);" title="Toggle Theme">
+                <i class="fa-solid" id="theme-icon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+
+        <!-- --- 1. LANDING PAGE VIEW --- -->
+        <section id="landing-view" class="view">
+            <div class="text-center py-20">
+                <h1 class="text-5xl font-extrabold mb-4 text-runtipi-red">
+                    The Ultimate Runtipi Config Suite
+                </h1>
+                <p class="text-xl text-gray-400 mb-8 max-w-3xl mx-auto" style="color: var(--color-text-secondary);">
+                    Create, customize, and package Runtipi applications and configure your server infrastructure.
+                </p>
+                <button onclick="showView('serverConfigurator');" class="button-style text-lg text-white bg-runtipi-red hover:bg-runtipi-red-hover">
+                    Start Server Configuration <i class="fa-solid fa-server ml-2"></i>
+                </button>
+
+                <div class="mt-16 grid md:grid-cols-4 gap-8">
+                    <div class="bg-card p-6 rounded-xl shadow-2xl hover:scale-[1.02] transition">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center text-runtipi-red">
+                            <i class="fa-solid fa-box-open mr-3"></i> App Generator
+                        </h3>
+                        <p style="color: var(--color-text-secondary);" class="text-sm">Create and package custom Runtipi app definitions (`runtipi.yml`, `docker-compose.yml`, icons) into a ready-to-use ZIP archive.</p>
+                    </div>
+                    <div class="bg-card p-6 rounded-xl shadow-2xl hover:scale-[1.02] transition">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center text-runtipi-red">
+                            <i class="fa-solid fa-server mr-3"></i> Server Configurator
+                        </h3>
+                        <p style="color: var(--color-text-secondary);" class="text-sm">Configure server-level settings: storage paths, custom networking, and Traefik reverse proxy with automatic HTTPS/SSL.</p>
+                    </div>
+                    <div class="bg-card p-6 rounded-xl shadow-2xl hover:scale-[1.02] transition">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center text-runtipi-red">
+                            <i class="fa-solid fa-wrench mr-3"></i> Config Tool
+                        </h3>
+                        <p style="color: var(--color-text-secondary);" class="text-sm">Utility for validating, converting (YAML to JSON), and formatting your Runtipi config files.</p>
+                    </div>
+                    <div class="bg-card p-6 rounded-xl shadow-2xl hover:scale-[1.02] transition">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center text-runtipi-red">
+                            <i class="fa-solid fa-book-open mr-3"></i> Variable Reference
+                        </h3>
+                        <p style="color: var(--color-text-secondary);" class="text-sm">Quick reference guide for common Docker/Runtipi environment variables like PUID, PGID, and DATA_VOLUME_PATH.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- --- 2. APP GENERATOR VIEW --- -->
+        <section id="appGenerator-view" class="view hidden">
+            <h2 class="text-4xl font-bold mb-8 text-runtipi-red flex items-center">
+                <i class="fa-solid fa-box-open mr-3"></i> Runtipi App Generator
+            </h2>
+
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- Configuration Form Column -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-card p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i class="fa-solid fa-layer-group mr-2"></i> App Metadata
+                        </h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="app-name" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">App Name (Slug)</label>
+                                <input type="text" id="app-name" value="my-custom-app" oninput="updateAppGeneratorForm()" 
+                                       placeholder="my-custom-app (used for folder name)"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                            <div>
+                                <label for="app-display-name" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Display Name</label>
+                                <input type="text" id="app-display-name" value="My Custom App" oninput="updateAppGeneratorForm()" 
+                                       placeholder="e.g., Plex Media Server"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                        </div>
+                        
+                        <label for="app-description" class="block text-xs font-semibold uppercase mt-4 mb-1" style="color: var(--color-text-secondary);">Description</label>
+                        <textarea id="app-description" rows="2" oninput="updateAppGeneratorForm()" 
+                                  placeholder="A short description of what this app does."
+                                  class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red resize-none custom-scrollbar" style="border-color: var(--color-border); color: var(--color-text-primary);">My awesome app for self-hosting!</textarea>
+
+                    </div>
+
+                    <div class="bg-card p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i class="fa-solid fa-docker mr-2"></i> Docker Details
+                        </h3>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="md:col-span-2">
+                                <label for="docker-image" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Docker Image</label>
+                                <input type="text" id="docker-image" value="ghcr.io/linuxserver/calibre-web" oninput="updateAppGeneratorForm()" 
+                                       placeholder="e.g., linuxserver/calibre-web"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                            <div>
+                                <label for="docker-tag" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Tag</label>
+                                <input type="text" id="docker-tag" value="latest" oninput="updateAppGeneratorForm()" 
+                                       placeholder="e.g., latest, 2.15.0"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-3 gap-4 mt-4">
+                            <div>
+                                <label for="web-port" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Web Port (Internal)</label>
+                                <input type="number" id="web-port" value="8083" oninput="updateAppGeneratorForm()" 
+                                       placeholder="e.g., 8080"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="app-icon" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Icon Name (Font Awesome)</label>
+                                <input type="text" id="app-icon" value="fa-book-reader" oninput="updateAppGeneratorForm()" 
+                                       placeholder="e.g., fa-server, fa-cloud"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Environment Variables -->
+                    <div class="bg-card p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i class="fa-solid fa-cogs mr-2"></i> Environment Variables
+                        </h3>
+                        <textarea id="env-vars" rows="5" oninput="updateAppGeneratorForm()" 
+                                  placeholder="key=value (one per line). Use PUID=1000 and PGID=1000 for standard access."
+                                  class="w-full p-3 rounded-lg text-sm font-mono bg-input border focus:ring-runtipi-red focus:border-runtipi-red resize-none custom-scrollbar" style="border-color: var(--color-border); color: var(--color-text-primary);">PUID=1000
+PGID=1000
+TZ=Europe/London</textarea>
+                        <p class="text-xs mt-2" style="color: var(--color-text-secondary);">These variables will be added to the `docker-compose.yml` file. See the **Variable Reference** for more details.</p>
+                    </div>
+                </div>
+
+                <!-- YAML Output Column -->
+                <div class="lg:col-span-1 flex flex-col space-y-4">
+                    <!-- Runtipi.yml Preview -->
+                    <div class="bg-card p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center text-runtipi-red">
+                            <i class="fa-solid fa-file-export mr-2"></i> `runtipi.yml` Preview
+                        </h3>
+                        <textarea 
+                            id="runtipi-yaml-preview" 
+                            rows="10" 
+                            readonly 
+                            placeholder="runtipi.yml content."
+                            class="w-full p-3 rounded-lg border bg-input custom-scrollbar text-sm font-mono resize-none" 
+                            style="border-color: var(--color-border); color: var(--color-text-primary);"
+                        ></textarea>
+                    </div>
+
+                    <!-- Docker-compose.yml Preview -->
+                    <div class="bg-card p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center text-runtipi-red">
+                            <i class="fa-solid fa-file-export mr-2"></i> `docker-compose.yml` Preview
+                        </h3>
+                        <textarea 
+                            id="docker-compose-yaml-preview" 
+                            rows="10" 
+                            readonly 
+                            placeholder="docker-compose.yml content."
+                            class="w-full p-3 rounded-lg border bg-input custom-scrollbar text-sm font-mono resize-none" 
+                            style="border-color: var(--color-border); color: var(--color-text-primary);"
+                        ></textarea>
+                    </div>
+
+                    <button onclick="downloadAppZip()" class="w-full button-style text-white bg-runtipi-red hover:bg-runtipi-red-hover">
+                        <i class="fa-solid fa-file-zipper mr-2"></i> Generate & Download App ZIP
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- --- 3. SERVER CONFIGURATOR VIEW --- -->
+        <section id="serverConfigurator-view" class="view hidden">
+            <h2 class="text-4xl font-bold mb-8 text-runtipi-red flex items-center">
+                <i class="fa-solid fa-server mr-3"></i> Runtipi Server Configurator
+            </h2>
+
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- Configuration Form Column -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Storage Path -->
+                    <div class="bg-card p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i class="fa-solid fa-hdd mr-2"></i> Base Storage Path
+                        </h3>
+                        <label for="data-volume-path" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Data Volume Path</label>
+                        <input type="text" id="data-volume-path" value="/mnt/data/runtipi" oninput="updateServerConfigFromForm()" 
+                               placeholder="/mnt/data/runtipi"
+                               class="w-full p-3 rounded-lg bg-input border focus:ring-2 focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                        <p class="text-xs mt-2" style="color: var(--color-text-secondary);">This is the base directory on your host machine where all app data will be stored. See **Variable Reference** for `DATA_VOLUME_PATH` details.</p>
+                    </div>
+
+                    <!-- System User Defaults (PUID/PGID) -->
+                    <div class="bg-card p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i class="fa-solid fa-users mr-2"></i> System User/Group Defaults (PUID/PGID)
+                        </h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="puid" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Process User ID (PUID)</label>
+                                <input type="number" id="puid" value="1000" oninput="updateServerConfigFromForm()" 
+                                       placeholder="1000"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                            <div>
+                                <label for="pgid" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Process Group ID (PGID)</label>
+                                <input type="number" id="pgid" value="1000" oninput="updateServerConfigFromForm()" 
+                                       placeholder="1000"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                        </div>
+                        <p class="text-xs mt-2" style="color: var(--color-text-secondary);">These IDs ensure consistent file permissions for all apps. See **Variable Reference** for more info on PUID/PGID.</p>
+                    </div>
+                    
+                    <!-- Networking Setup -->
+                    <div class="bg-card p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i class="fa-solid fa-network-wired mr-2"></i> Custom Docker Networking
+                        </h3>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="network-name" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Network Name</label>
+                                <input type="text" id="network-name" value="runtipi_network" oninput="updateServerConfigFromForm()" 
+                                       placeholder="runtipi_network"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                            <div>
+                                <label for="subnet" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Subnet (CIDR)</label>
+                                <input type="text" id="subnet" value="172.20.0.0/16" oninput="updateServerConfigFromForm()" 
+                                       placeholder="172.20.0.0/16"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                            <div>
+                                <label for="gateway" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Gateway</label>
+                                <input type="text" id="gateway" value="172.20.0.1" oninput="updateServerConfigFromForm()" 
+                                       placeholder="172.20.0.1"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Traefik & HTTPS Setup -->
+                    <div class="bg-card p-6 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i class="fa-solid fa-route mr-2"></i> Traefik Reverse Proxy
+                        </h3>
+                        
+                        <div class="mb-4">
+                            <label for="traefik-enabled" class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="traefik-enabled" onchange="updateServerConfigFromForm()" class="form-checkbox h-5 w-5 rounded text-runtipi-red bg-input border" style="border-color: var(--color-border);" checked>
+                                <span class="text-sm font-medium" style="color: var(--color-text-primary);">Enable Traefik Reverse Proxy</span>
+                            </label>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="internal-host" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Internal Hostname (LAN)</label>
+                                <input type="text" id="internal-host" value="local.runtipi.com" oninput="updateServerConfigFromForm()" 
+                                       placeholder="local.runtipi.com"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                            <div>
+                                <label for="external-host" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">External Hostname (Internet)</label>
+                                <input type="text" id="external-host" value="" oninput="updateServerConfigFromForm()" 
+                                       placeholder="app.my-domain.com"
+                                       class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                            </div>
+                        </div>
+
+                        <!-- HTTPS CONFIGURATION - Visibility controlled by Traefik checkbox -->
+                        <div id="https-settings" class="mt-4 p-4 rounded-xl" style="border: 1px dashed var(--color-runtipi-red);">
+                            <h4 class="text-lg font-medium mb-3 flex items-center text-runtipi-red">
+                                <i class="fa-solid fa-lock mr-2"></i> Automatic HTTPS Setup
+                            </h4>
+                            
+                            <div class="mb-3">
+                                <label for="https-enabled" class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="https-enabled" onchange="updateServerConfigFromForm()" class="form-checkbox h-5 w-5 rounded text-runtipi-red bg-input border" style="border-color: var(--color-border);" checked>
+                                    <span class="text-sm font-medium" style="color: var(--color-text-primary);">Enable HTTPS via Certificate Resolver</span>
+                                </label>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="cert-resolver" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Certificate Resolver</label>
+                                    <input type="text" id="cert-resolver" value="le" oninput="updateServerConfigFromForm()" 
+                                           placeholder="e.g., le (Let's Encrypt)"
+                                           class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                                </div>
+                                <div>
+                                    <label for="domain-email" class="block text-xs font-semibold uppercase mb-1" style="color: var(--color-text-secondary);">Domain Contact Email</label>
+                                    <input type="email" id="domain-email" value="" oninput="updateServerConfigFromForm()" 
+                                           placeholder="cert-admin@yourdomain.com"
+                                           class="w-full p-2 rounded-lg text-sm bg-input border focus:ring-runtipi-red focus:border-runtipi-red" style="border-color: var(--color-border); color: var(--color-text-primary);">
+                                </div>
+                            </div>
+                            <p class="text-xs mt-2" style="color: var(--color-text-secondary);">You must provide a valid email address for Let's Encrypt certificates.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- YAML Output Column -->
+                <div class="lg:col-span-1 flex flex-col space-y-4">
+                    <div class="bg-card p-6 rounded-xl shadow-lg flex-grow">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i class="fa-solid fa-file-export mr-2"></i> Generated `server_config.yml`
+                        </h3>
+                        <textarea 
+                            id="server-output-preview" 
+                            rows="20" 
+                            readonly 
+                            placeholder="Your configuration YAML will be generated here in real-time."
+                            class="w-full p-3 rounded-lg border bg-input custom-scrollbar text-sm font-mono flex-grow resize-none" 
+                            style="border-color: var(--color-border); color: var(--color-text-primary);"
+                        ></textarea>
+                        <button onclick="downloadServerConfigYaml()" class="w-full mt-4 button-style text-white bg-runtipi-red hover:bg-runtipi-red-hover">
+                            <i class="fa-solid fa-download mr-2"></i> Download `server_config.yml`
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- --- 4. CONFIG TOOL VIEW (Bidirectional) --- -->
+        <section id="configTool-view" class="view hidden">
+            <h2 class="text-4xl font-bold mb-8 text-runtipi-red flex items-center">
+                <i class="fa-solid fa-wrench mr-3"></i> Bidirectional Config Tool
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Left Panel: YAML Input / Converted YAML Output -->
+                <div class="bg-card p-6 rounded-xl shadow-lg flex flex-col h-full space-y-4">
+                    <h3 class="text-xl font-semibold flex items-center">
+                        <i class="fa-solid fa-file-code mr-2"></i> YAML Input / Output
+                    </h3>
+                    <textarea 
+                        id="yaml-input" 
+                        rows="15" 
+                        placeholder="Paste your runtipi.yml or server_config.yml here..."
+                        class="w-full p-3 rounded-lg border focus:ring-2 focus:ring-runtipi-red bg-input custom-scrollbar text-sm font-mono flex-grow resize-none" 
+                        style="border-color: var(--color-border); color: var(--color-text-primary);"
+                    ></textarea>
+                    
+                    <button id="yaml-to-json-btn" onclick="convertYamlToJson()" class="w-full button-style text-white bg-runtipi-red hover:bg-runtipi-red-hover">
+                        <i class="fa-solid fa-arrow-down-long mr-2"></i> Convert YAML to JSON
+                    </button>
+                    <button id="validate-btn" onclick="validateYaml(true)" class="w-full button-style text-white bg-green-600 hover:bg-green-500">
+                        <i class="fa-solid fa-check mr-2"></i> Validate & Format YAML
+                    </button>
+                </div>
+
+                <!-- Right Panel: JSON Output / Converted JSON Input -->
+                <div class="flex flex-col space-y-6">
+                    <!-- Conversion Status -->
+                    <div id="message-box-container" class="bg-card p-4 rounded-xl shadow-lg">
+                         <div id="message-box" class="p-3 rounded-lg text-sm transition-opacity duration-300 opacity-100 min-h-[40px] flex items-center" style="background-color: var(--bg-input); color: var(--color-text-secondary); border: 1px solid var(--color-border);">
+                            Awaiting input...
+                        </div>
+                    </div>
+
+                    <!-- JSON Output -->
+                    <div class="bg-card p-6 rounded-xl shadow-lg flex-grow space-y-4">
+                        <h3 class="text-xl font-semibold flex items-center">
+                            <i class="fa-solid fa-file-lines mr-2"></i> JSON Output / Input
+                        </h3>
+                        <textarea 
+                            id="json-output" 
+                            rows="10" 
+                            placeholder="Converted JSON or validation messages will appear here. Edit this box to convert back to YAML."
+                            class="w-full p-3 rounded-lg border focus:ring-2 focus:ring-runtipi-red bg-input custom-scrollbar text-sm font-mono flex-grow resize-none" 
+                            style="border-color: var(--color-border); color: var(--color-text-primary);"
+                        ></textarea>
+                        
+                        <button onclick="convertJsonToYaml()" class="w-full button-style text-white bg-indigo-600 hover:bg-indigo-500">
+                            <i class="fa-solid fa-arrow-up-long mr-2"></i> Convert JSON to YAML
+                        </button>
+                        <button onclick="copyToClipboard('json-output')" class="w-full button-style text-white bg-blue-600 hover:bg-blue-500">
+                            <i class="fa-solid fa-copy mr-2"></i> Copy JSON Output
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- --- 5. VARIABLE REFERENCE VIEW --- -->
+        <section id="variableReference-view" class="view hidden">
+            <h2 class="text-4xl font-bold mb-8 text-runtipi-red flex items-center">
+                <i class="fa-solid fa-book-open mr-3"></i> Common Runtipi/Docker Variables
+            </h2>
+
+            <div class="space-y-8">
+                <p class="text-lg" style="color: var(--color-text-secondary);">
+                    These environment variables are critical for configuring Runtipi's file access and external Docker containers.
+                </p>
+
+                <!-- Runtipi System Variables Table -->
+                <div class="bg-card p-6 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-runtipi-red">Runtipi System Variables (Used in `runtipi.yml` Volumes)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-700/50">
+                            <thead class="text-left">
+                                <tr>
+                                    <th class="py-3 px-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-secondary);">Variable</th>
+                                    <th class="py-3 px-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-secondary);">Description</th>
+                                    <th class="py-3 px-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-secondary);">Example Value</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700/30">
+                                <tr class="hover:bg-gray-700/20 transition duration-150">
+                                    <td class="py-3 px-2 font-mono text-sm font-bold text-runtipi-red">DATA_VOLUME_PATH</td>
+                                    <td class="py-3 px-2 text-sm" style="color: var(--color-text-primary);">The base path on the **host machine** where Runtipi stores all persistent app data. Defined in `server_config.yml`.</td>
+                                    <td class="py-3 px-2 font-mono text-sm">`/mnt/data/runtipi`</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700/20 transition duration-150">
+                                    <td class="py-3 px-2 font-mono text-sm font-bold text-runtipi-red">APP_ID</td>
+                                    <td class="py-3 px-2 text-sm" style="color: var(--color-text-primary);">The unique slug (name) of the app, automatically used by Runtipi to create app-specific storage paths.</td>
+                                    <td class="py-3 px-2 font-mono text-sm">`my-custom-app`</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Standard Docker Variables Table -->
+                <div class="bg-card p-6 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-runtipi-red">Standard Docker Variables (Used in `docker-compose.yml` Environment)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-700/50">
+                            <thead class="text-left">
+                                <tr>
+                                    <th class="py-3 px-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-secondary);">Variable</th>
+                                    <th class="py-3 px-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-secondary);">Description</th>
+                                    <th class="py-3 px-2 text-xs font-semibold uppercase tracking-wider" style="color: var(--color-text-secondary);">Common Value</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700/30">
+                                <tr class="hover:bg-gray-700/20 transition duration-150">
+                                    <td class="py-3 px-2 font-mono text-sm font-bold text-runtipi-red">PUID</td>
+                                    <td class="py-3 px-2 text-sm" style="color: var(--color-text-primary);">**Process User ID.** Sets the UID for the user running the main process *inside* the container. Critical for file access permissions.</td>
+                                    <td class="py-3 px-2 font-mono text-sm">`1000` (Default non-root user)</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700/20 transition duration-150">
+                                    <td class="py-3 px-2 font-mono text-sm font-bold text-runtipi-red">PGID</td>
+                                    <td class="py-3 px-2 text-sm" style="color: var(--color-text-primary);">**Process Group ID.** Sets the GID for the group running the process *inside* the container.</td>
+                                    <td class="py-3 px-2 font-mono text-sm">`1000` (Default non-root group)</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700/20 transition duration-150">
+                                    <td class="py-3 px-2 font-mono text-sm font-bold text-runtipi-red">TZ</td>
+                                    <td class="py-3 px-2 text-sm" style="color: var(--color-text-primary);">**Time Zone.** Sets the correct time zone for the app's internal clock and logs.</td>
+                                    <td class="py-3 px-2 font-mono text-sm">e.g., `Europe/London`</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700/20 transition duration-150">
+                                    <td class="py-3 px-2 font-mono text-sm font-bold text-runtipi-red">VERSION</td>
+                                    <td class="py-3 px-2 text-sm" style="color: var(--color-text-primary);">Used by some images (like LinuxServer.io) to specify a specific app version or branch.</td>
+                                    <td class="py-3 px-2 font-mono text-sm">`latest` or `armhf`</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs mt-4 italic" style="color: var(--color-text-secondary);">
+                        <i class="fa-solid fa-circle-info mr-1"></i> Tip: To find your user's required **PUID** and **PGID** on your host machine, run `id -u` for the PUID and `id -g` for the PGID in your terminal.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-6" style="background-color: var(--bg-card); border-top: 1px solid var(--color-border);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm" style="color: var(--color-text-secondary);">
+            &copy; 2024 Runtipi Config Suite | Built by your Coding Partner
+        </div>
+    </footer>
+
+    <script type="text/javascript">
+        // --- Global Variables and Constants ---
+        const htmlElement = document.documentElement; 
+        // ADD 'variableReference' to the array
+        const views = ['landing', 'appGenerator', 'serverConfigurator', 'configTool', 'variableReference'];
+
+        // Default Server Config State (Used by serverConfigurator-view)
+        const currentServerConfig = {
+            data_volume_path: '/mnt/data/runtipi',
+            system_defaults: {
+                puid: 1000,
+                pgid: 1000
+            },
+            networking: {
+                network_name: 'runtipi_network',
+                subnet: '172.20.0.0/16',
+                gateway: '172.20.0.1'
+            },
+            traefik: {
+                enabled: true,
+                internal_host: 'local.runtipi.com',
+                external_host: '',
+                https: { 
+                    enabled: true,
+                    cert_resolver: 'le',
+                    domain_email: ''
+                }
+            }
+        };
+
+        // A simple, colored SVG icon (a gear) base64 encoded for the ZIP file
+        const defaultSvgIcon = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <!-- Fill color is the Runtipi Red accent -->
+    <path fill="#FF66A3" d="M495.9 166.6c3.4 8.7 .5 18.4-6.3 24.6l-80 75.3 14.2 106.3c1.7 13.1-4.4 25.8-16 33.7s-26.6 8.5-38 3.5l-93.5-40.6-93.5 40.6c-11.4 5-25.7 3.9-38-3.5s-17.7-20.6-16-33.7l14.2-106.3-80-75.3c-6.8-6.3-9.7-16-6.3-24.6s8.4-15.3 17.5-17.6l107.1-15.4 47.9-97.1c5.4-10.9 16.5-17.6 28.6-17.6s23.2 6.7 28.6 17.6l47.9 97.1 107.1 15.4c9.2 2.3 17.5 10.4 17.5 17.6z"/>
+</svg>
+`.trim();
+        
+        // --- Function Definitions (Must be global for HTML onclick calls to work) ---
+
+        /**
+         * Shows the specified view section and updates the URL hash.
+         * @param {string} viewName - The ID suffix of the view section (e.g., 'landing').
+         */
+        function showView(viewName) {
+            views.forEach(view => {
+                const section = document.getElementById(view + '-view');
+                const navButton = document.getElementById('nav-' + view);
+                const isActive = view === viewName;
+                
+                if (section) {
+                    section.classList.toggle('hidden', !isActive);
+                }
+
+                if (navButton) {
+                    const isDark = htmlElement.getAttribute('data-theme') === 'dark';
+                    const activeBg = isDark ? 'bg-gray-800/50' : 'bg-gray-200';
+                    const inactiveText = isDark ? 'text-gray-400' : 'text-gray-600';
+                    
+                    // Remove all temporary classes used for active/inactive state
+                    navButton.classList.remove('text-runtipi-red', 'font-bold', 'bg-gray-800/50', 'text-gray-400', 'bg-gray-200', 'text-gray-600', 'hover:bg-gray-700/50', 'hover:bg-gray-300');
+
+                    if (isActive) {
+                        navButton.classList.add('text-runtipi-red', 'font-bold', activeBg);
+                    } else {
+                        navButton.classList.add(inactiveText);
+                        // Add hover effect for inactive buttons based on theme
+                        navButton.classList.add(isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-300');
+                    }
+                }
+            });
+
+            // Update URL hash without triggering a full reload
+            window.location.hash = viewName;
+            
+            // Run initial setup for the new view
+            if (viewName === 'serverConfigurator') {
+                 // Initialize the server config form and output when switching to this view
+                updateServerConfigFromForm();
+            } else if (viewName === 'appGenerator') {
+                // Initialize the app generator form and output
+                updateAppGeneratorForm();
+            }
+        }
+
+        /**
+         * Updates the theme icon and aria-label.
+         * @param {string} newTheme - The current theme ('dark' or 'light').
+         */
+        function updateThemeContent(newTheme) {
+            const icon = document.getElementById('theme-icon');
+            const toggleButton = document.getElementById('theme-toggle');
+            if (icon && toggleButton) {
+                icon.classList.remove('fa-sun', 'fa-moon');
+                if (newTheme === 'dark') {
+                    icon.classList.add('fa-sun');
+                    toggleButton.title = "Switch to Light Theme";
+                } else {
+                    icon.classList.add('fa-moon');
+                    toggleButton.title = "Switch to Dark Theme";
+                }
+                
+                // Update hover color on the toggle button itself
+                toggleButton.classList.remove('hover:bg-gray-700/50', 'hover:bg-gray-300/50');
+                toggleButton.classList.add(newTheme === 'dark' ? 'hover:bg-gray-700/50' : 'hover:bg-gray-300/50');
+            }
+        }
+
+        /**
+         * Toggles the current theme state.
+         */
+        function toggleTheme() {
+            const oldTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = oldTheme === 'dark' ? 'light' : 'dark';
+            
+            // Update HTML attribute and local storage
+            htmlElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // Update icon and re-apply navigation styling
+            updateThemeContent(newTheme);
+            handleRouting(); // Re-apply navigation styling to pick up new theme's colors
+        }
+
+        /**
+         * Sets a message in the dedicated message box with appropriate styling.
+         * @param {string} message - The text message to display.
+         * @param {string} type - 'success', 'error', or 'info'.
+         */
+        function displayMessage(message, type) {
+            const box = document.getElementById('message-box'); 
+            if (!box) {
+                // Should only happen if the user is outside the configTool, but good practice to check
+                console.log(`[Message: ${type.toUpperCase()}] ${message}`);
+                return;
+            }
+
+            box.textContent = message;
+            // Dynamic color classes based on theme
+            const isDark = htmlElement.getAttribute('data-theme') === 'dark';
+            
+            // Define color maps for different message types
+            const colorMap = {
+                error: { bg: isDark ? 'bg-red-800/50' : 'bg-red-200', text: isDark ? 'text-red-300' : 'text-red-800' },
+                success: { bg: isDark ? 'bg-green-800/50' : 'bg-green-200', text: isDark ? 'text-green-300' : 'text-green-800' },
+                info: { bg: isDark ? 'bg-blue-800/50' : 'bg-blue-200', text: isDark ? 'text-blue-300' : 'text-blue-800' }
+            };
+            
+            const colors = colorMap[type] || colorMap.info;
+            
+            // Reset and apply new classes
+            box.className = 'p-3 rounded-lg text-sm transition-opacity duration-300 opacity-100 min-h-[40px] flex items-center';
+            box.classList.add(colors.bg, colors.text);
+            box.style.border = '1px solid';
+            box.style.borderColor = colors.text; // Use the text color for the border
+
+            // Auto-hide the success/info message after 5 seconds, resetting to default appearance
+            if (type !== 'error') {
+                setTimeout(() => {
+                    box.style.backgroundColor = 'var(--bg-input)';
+                    box.style.color = 'var(--color-text-secondary)';
+                    box.textContent = 'Awaiting input...';
+                    box.style.borderColor = 'var(--color-border)';
+                    box.className = 'p-3 rounded-lg text-sm transition-opacity duration-300 opacity-100 min-h-[40px] flex items-center'; // Reset classes
+                }, 5000);
+            }
+        }
+
+        /**
+         * Copies text from a specified textarea ID to the clipboard.
+         * @param {string} elementId - ID of the textarea to copy from.
+         */
+        function copyToClipboard(elementId) {
+            const copyText = document.getElementById('configTool-view')?.querySelector(`#${elementId}`);
+            if (!copyText || !copyText.value) {
+                displayMessage('Nothing to copy.', 'info');
+                return;
+            }
+
+            // Select and copy the content
+            try {
+                copyText.select();
+                // Use document.execCommand('copy') for better compatibility in iFrames
+                document.execCommand('copy'); 
+                displayMessage('JSON copied to clipboard!', 'success');
+            } catch (err) {
+                console.error('Copy failed:', err);
+                displayMessage('Error: Could not copy to clipboard. Please try manually.', 'error');
+            }
+        }
+
+        /**
+         * Utility function to download text content as a file.
+         * @param {string} filename - The name of the file to download.
+         * @param {string} text - The content of the file.
+         */
+        function downloadFile(filename, text) {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+        
+        /**
+         * Handles routing on initial load and hash changes.
+         */
+        function handleRouting() {
+            const hash = window.location.hash.substring(1);
+            if (hash && views.includes(hash)) {
+                showView(hash);
+            } else {
+                showView('landing');
+            }
+        }
+
+
+        // ------------------------------------
+        // --- 1. APP GENERATOR LOGIC ---
+        // ------------------------------------
+
+        /**
+         * Parses environment variables from a textarea string (key=value\nkey2=value2) into an array of strings.
+         * @param {string} envString - The raw string input from the environment variables textarea.
+         * @returns {string[]} An array of environment variable strings.
+         */
+        function parseEnvVars(envString) {
+            if (!envString) return [];
+            return envString.split('\n')
+                           .map(line => line.trim())
+                           .filter(line => line.length > 0);
+        }
+
+        /**
+         * Generates the runtipi.yml content based on form inputs.
+         * @param {object} inputValues - The object containing all form values.
+         * @returns {string} The generated runtipi.yml content.
+         */
+        function generateRuntipiYaml(inputValues) {
+            const runtipiConfig = {
+                id: inputValues.appName,
+                name: inputValues.appDisplayName,
+                description: inputValues.appDescription,
+                category: 'Utility', // Default category
+                url: `http://${inputValues.appName}`, // Default access URL
+                icon: inputValues.appIcon,
+                // The main service name must match the service in docker-compose.yml
+                service: inputValues.appName,
+                ports: [
+                    {
+                        port: parseInt(inputValues.webPort),
+                        protocol: 'tcp',
+                        path: '/',
+                        name: 'Web Interface'
+                    }
+                ],
+                // Simple default volume definition
+                volumes: [
+                    {
+                        host_path: `\${DATA_VOLUME_PATH}/\${APP_ID}/config`,
+                        container_path: '/config'
+                    }
+                ]
+            };
+
+            return jsyaml.dump(runtipiConfig, { indent: 2, lineWidth: -1 });
+        }
+
+        /**
+         * Generates the docker-compose.yml content based on form inputs.
+         * @param {object} inputValues - The object containing all form values.
+         * @returns {string} The generated docker-compose.yml content.
+         */
+        function generateDockerComposeYaml(inputValues) {
+            const composeConfig = {
+                version: '3.8',
+                services: {
+                    [inputValues.appName]: {
+                        image: `${inputValues.dockerImage}:${inputValues.dockerTag}`,
+                        container_name: inputValues.appName,
+                        restart: 'unless-stopped',
+                        ports: [
+                            `${inputValues.webPort}:${inputValues.webPort}`
+                        ],
+                        environment: parseEnvVars(inputValues.envVars),
+                        volumes: [
+                            '${DATA_VOLUME_PATH}/${APP_ID}/config:/config' // Volume path must match runtipi.yml host_path
+                        ]
+                    }
+                }
+            };
+
+            return jsyaml.dump(composeConfig, { indent: 2, lineWidth: -1 });
+        }
+        
+        /**
+         * Main function to read app generator form, update previews, and prepare for download.
+         */
+        function updateAppGeneratorForm() {
+            // 1. Read Inputs
+            const inputValues = {
+                // Sanitize the app name to be slug-friendly (lowercase, alphanumeric, dashes)
+                appName: document.getElementById('app-name')?.value.replace(/[^a-z0-9-]/g, '').toLowerCase() || 'my-custom-app',
+                appDisplayName: document.getElementById('app-display-name')?.value || 'My Custom App',
+                appDescription: document.getElementById('app-description')?.value || 'My awesome app for self-hosting!',
+                dockerImage: document.getElementById('docker-image')?.value || 'ubuntu',
+                dockerTag: document.getElementById('docker-tag')?.value || 'latest',
+                webPort: document.getElementById('web-port')?.value || '80',
+                appIcon: document.getElementById('app-icon')?.value || 'fa-code',
+                envVars: document.getElementById('env-vars')?.value || ''
+            };
+            
+            // 2. Update Slugs (App Name is used as folder/service name, sanitizing it)
+            document.getElementById('app-name').value = inputValues.appName;
+            
+            // 3. Generate YAMLs
+            const runtipiYaml = generateRuntipiYaml(inputValues);
+            const dockerComposeYaml = generateDockerComposeYaml(inputValues);
+            
+            // 4. Update Previews
+            document.getElementById('runtipi-yaml-preview').value = runtipiYaml;
+            document.getElementById('docker-compose-yaml-preview').value = dockerComposeYaml;
+        }
+
+        /**
+         * Packages the generated files into a ZIP archive and triggers the download.
+         */
+        async function downloadAppZip() {
+            const appName = document.getElementById('app-name')?.value.replace(/[^a-z0-9-]/g, '').toLowerCase();
+            const runtipiYaml = document.getElementById('runtipi-yaml-preview')?.value;
+            const dockerComposeYaml = document.getElementById('docker-compose-yaml-preview')?.value;
+            
+            if (!appName || !runtipiYaml || !dockerComposeYaml) {
+                // Note: Using console.error here as the dedicated message box is on a different view
+                console.error('Error: App configuration is incomplete. Please check all fields.'); 
+                // We use a custom modal or message box, but since this is not available on this view, we use alert as a fallback/test
+                alert('Error: App configuration is incomplete. Please check all fields.'); 
+                return;
+            }
+
+            if (typeof JSZip === 'undefined') {
+                console.error('JSZip library not loaded. Cannot generate zip file.');
+                alert('Error: JSZip library not loaded. Cannot generate zip file.');
+                return;
+            }
+
+            const zip = new JSZip();
+
+            // Runtipi uses the appName as the folder name
+            const appFolder = zip.folder(appName);
+            
+            // Add configuration files
+            appFolder.file('runtipi.yml', runtipiYaml);
+            appFolder.file('docker-compose.yml', dockerComposeYaml);
+            
+            // Add a simple SVG icon (required by Runtipi store, used the default color)
+            appFolder.file('icon.svg', defaultSvgIcon); 
+
+            // Generate the zip blob
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+            // Trigger download
+            const url = URL.createObjectURL(zipBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${appName}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Simple alert confirmation
+            alert(`${appName}.zip downloaded successfully! Extract and copy to your Runtipi /apps folder.`);
+        }
+
+
+        // ------------------------------------
+        // --- 2. SERVER CONFIGURATOR LOGIC (Finalized) ---
+        // ------------------------------------
+
+        /**
+         * Reads all input values from the Server Configurator form, updates the global config object,
+         * and controls the visibility of conditional UI elements.
+         */
+        function updateServerConfigFromForm() {
+            // --- 1. Read Form Inputs ---
+
+            // Storage Path
+            const serverPath = document.getElementById('data-volume-path')?.value || currentServerConfig.data_volume_path;
+
+            // System Defaults (Parse to Int)
+            const puid = parseInt(document.getElementById('puid')?.value) || 0;
+            const pgid = parseInt(document.getElementById('pgid')?.value) || 0;
+
+            // Networking
+            const networkName = document.getElementById('network-name')?.value || currentServerConfig.networking.network_name;
+            const subnet = document.getElementById('subnet')?.value || currentServerConfig.networking.subnet;
+            const gateway = document.getElementById('gateway')?.value || currentServerConfig.networking.gateway;
+
+            // Traefik Base (Checked property for boolean)
+            const traefikEnabled = document.getElementById('traefik-enabled')?.checked ?? currentServerConfig.traefik.enabled;
+            const internalHost = document.getElementById('internal-host')?.value || currentServerConfig.traefik.internal_host;
+            const externalHost = document.getElementById('external-host')?.value || currentServerConfig.traefik.external_host;
+            
+            // Traefik HTTPS (Checked property for boolean) 
+            const httpsEnabled = document.getElementById('https-enabled')?.checked ?? currentServerConfig.traefik.https?.enabled ?? true;
+            const certResolver = document.getElementById('cert-resolver')?.value || currentServerConfig.traefik.https?.cert_resolver || 'le';
+            const domainEmail = document.getElementById('domain-email')?.value || currentServerConfig.traefik.https?.domain_email || '';
+
+
+            // --- 2. Conditional UI Control ---
+
+            const httpsSettingsDiv = document.getElementById('https-settings');
+            if (httpsSettingsDiv) {
+                // If Traefik is disabled, hide the entire HTTPS block
+                httpsSettingsDiv.classList.toggle('hidden', !traefikEnabled);
+            }
+            // Control visibility of HTTPS options based on the HTTPS checkbox
+            document.querySelectorAll('#https-settings input:not(#https-enabled)').forEach(input => {
+                input.disabled = !httpsEnabled;
+                input.classList.toggle('opacity-50', !httpsEnabled);
+            });
+
+
+            // --- 3. Update Global Configuration Object ---
+
+            currentServerConfig.data_volume_path = serverPath;
+            
+            currentServerConfig.system_defaults = {
+                puid: puid,
+                pgid: pgid
+            };
+
+            currentServerConfig.networking = {
+                network_name: networkName,
+                subnet: subnet,
+                gateway: gateway
+            };
+
+            currentServerConfig.traefik = {
+                enabled: traefikEnabled,
+                internal_host: internalHost,
+                external_host: externalHost,
+            };
+            
+            // Add HTTPS config only if Traefik AND HTTPS are enabled
+            if (traefikEnabled && httpsEnabled) {
+                currentServerConfig.traefik.https = {
+                    enabled: httpsEnabled,
+                    cert_resolver: certResolver,
+                    domain_email: domainEmail
+                };
+            } else if (currentServerConfig.traefik.hasOwnProperty('https')) {
+                // Remove the HTTPS block if it exists but is disabled
+                delete currentServerConfig.traefik.https;
+            }
+
+
+            // --- 4. Generate Output ---
+            generateServerConfigOutput(); 
+        }
+
+        /**
+         * Converts the currentServerConfig object back into a YAML string for preview.
+         */
+        function generateServerConfigOutput() {
+            const yamlOutput = document.getElementById('server-output-preview');
+
+            try {
+                // Convert the object back to YAML with a 2-space indent
+                const yamlString = jsyaml.dump(currentServerConfig, { indent: 2, lineWidth: -1 });
+                if (yamlOutput) {
+                     yamlOutput.value = yamlString;
+                }
+            } catch (e) {
+                if (yamlOutput) {
+                    yamlOutput.value = `Error generating YAML: ${e.message}`;
+                }
+            }
+        }
+
+        /**
+         * Downloads the generated server_config.yml file.
+         */
+        function downloadServerConfigYaml() {
+            const yamlText = document.getElementById('server-output-preview')?.value;
+            if (!yamlText || yamlText.includes('Error generating YAML')) {
+                // Using simple alert as no dedicated messagebox exists on this view
+                alert('Cannot download: Configuration preview is empty or contains an error.');
+                return;
+            }
+            downloadFile('server_config.yml', yamlText);
+        }
+
+
+        // ------------------------------------
+        // --- 3. CONFIG TOOL LOGIC ---
+        // ------------------------------------
+
+        /**
+         * Validates the YAML content in the input textarea.
+         * @param {boolean} shouldFormat - If true, formats and displays valid YAML back in the input box.
+         * @returns {object|null} The parsed YAML object or null if invalid.
+         */
+        function validateYaml(shouldFormat = false) {
+            const yamlTextarea = document.getElementById('configTool-view')?.querySelector('#yaml-input');
+            const jsonOutput = document.getElementById('configTool-view')?.querySelector('#json-output');
+
+            if (!yamlTextarea || !jsonOutput) return null;
+            
+            const yamlText = yamlTextarea.value;
+            jsonOutput.value = ''; // Clear JSON output
+
+            if (!yamlText.trim()) {
+                displayMessage('Input is empty. Please paste YAML content.', 'error');
+                return null;
+            }
+
+            try {
+                // 1. Parse and validate the YAML
+                const config = jsyaml.load(yamlText);
+                
+                if (config === null || typeof config !== 'object' && !Array.isArray(config)) {
+                    displayMessage('Validation failed: YAML is valid but represents an empty, scalar, or null value.', 'error');
+                    return null;
+                }
+                
+                // 2. Formatting step
+                if (shouldFormat) {
+                    // Convert back to YAML using dump to apply consistent formatting (2-space indent)
+                    const formattedYaml = jsyaml.dump(config, { indent: 2, lineWidth: -1 });
+                    yamlTextarea.value = formattedYaml; // Put formatted YAML back into the input
+                    displayMessage('YAML is valid and has been formatted (2-space indent).', 'success');
+                } else {
+                    displayMessage('YAML is valid! Ready to convert to JSON.', 'success');
+                }
+
+                return config;
+                
+            } catch (e) {
+                // Display specific error message from the js-yaml parser
+                displayMessage(`YAML Validation Error: ${e.message.split('\n')[0].trim()}`, 'error');
+                return null;
+            }
+        }
+
+        /**
+         * Converts valid YAML content to formatted JSON.
+         */
+        function convertYamlToJson() {
+            // Pass false to validateYaml to prevent immediate re-formatting on the input box
+            const configObject = validateYaml(false); 
+            const jsonOutput = document.getElementById('configTool-view')?.querySelector('#json-output');
+
+            if (configObject && jsonOutput) {
+                try {
+                    // Convert the parsed object to a prettified JSON string (2-space indent)
+                    const jsonString = JSON.stringify(configObject, null, 2);
+                    jsonOutput.value = jsonString;
+                    displayMessage('Successfully converted YAML to JSON. Edit the JSON and convert it back if needed!', 'success');
+                } catch (e) {
+                    // Should be rare if configObject is a standard JS object
+                    displayMessage(`JSON Conversion Error: ${e.message}`, 'error');
+                    jsonOutput.value = 'Error converting to JSON.';
+                }
+            } else if (jsonOutput) {
+                jsonOutput.value = 'Cannot convert due to invalid YAML.';
+            }
+        }
+        
+        /**
+         * Converts JSON content in the JSON Output textarea back into formatted YAML.
+         */
+        function convertJsonToYaml() {
+            const jsonOutput = document.getElementById('configTool-view')?.querySelector('#json-output');
+            const yamlInput = document.getElementById('configTool-view')?.querySelector('#yaml-input');
+            
+            if (!jsonOutput || !yamlInput) return;
+
+            const jsonText = jsonOutput.value;
+
+            if (!jsonText.trim()) {
+                displayMessage('JSON input is empty. Please convert or paste JSON content.', 'error');
+                return;
+            }
+
+            try {
+                // 1. Parse JSON
+                const configObject = JSON.parse(jsonText);
+
+                // 2. Convert object to YAML (cleanly formatted with 2-space indent)
+                const yamlString = jsyaml.dump(configObject, { indent: 2, lineWidth: -1 });
+
+                // 3. Display result in YAML Input area
+                yamlInput.value = yamlString;
+                
+                displayMessage('Successfully converted JSON back to YAML!', 'success');
+                jsonOutput.value = ''; // Clear JSON box for next conversion
+
+            } catch (e) {
+                // Display specific error message from JSON parser
+                displayMessage(`JSON Parsing Error: Invalid JSON syntax at position ${e.message.match(/position (\d+)/)?.[1] || '?'}.`, 'error');
+            }
+        }
+
+
+        // ------------------------------------
+        // --- Event Listeners and Initial Setup ---
+        // ------------------------------------
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleButton = document.getElementById('theme-toggle');
+
+            // --- Theme Initialization ---
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            htmlElement.setAttribute('data-theme', currentTheme);
+            updateThemeContent(currentTheme);
+            if (toggleButton) {
+                toggleButton.addEventListener('click', toggleTheme);
+            }
+
+            // --- Routing Initialization ---
+            window.addEventListener('hashchange', handleRouting);
+            handleRouting();
+            
+            // Simple click listener for the logo link to handle smooth scrolling/view switch
+            document.getElementById('logo-link')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                showView('landing');
+                window.scrollTo(0, 0);
+            });
+        });
+
+        // Handle browser back/forward buttons for hash changes (using global functions)
+        window.addEventListener('popstate', () => {
+             handleRouting();
+        });
+    </script>
+</body>
+</html>

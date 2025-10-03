@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runtipi App Generator - YAML Input</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load JS-YAML for parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <!-- Load Inter font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Load Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* --- Base Theme (DARK) --- */
+        :root {
+            /* General */
+            --bg-body: #131313;
+            --bg-container: #181818;
+            --bg-card: #1F1F1F;
+            --bg-input: #2D2D2D; /* New: for textareas/inputs */
+            --color-text-primary: #E2E8F0;
+            --color-text-secondary: #94A3B8;
+            --color-border: #2D2D2D;
+            --color-black-fill: #94A3B8;
+            /* Accents */
+            --color-runtipi-red: #FF66A3;
+            --color-runtipi-blue: #6495ED;
+            /* CTA */
+            --color-cta: #131313;
+            --color-cta-hover: #000000;
+            --color-cta-border: #555555;
+            --color-header-icon: #E2E8F0;
+            /* Alert/Status */
+            --color-error: #F87171;
+            --color-success: #34D399;
+        }
+
+        /* --- Light Theme Overrides --- */
+        html[data-theme='light'] {
+            /* General */
+            --bg-body: #F7F7F7;
+            --bg-container: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --bg-input: #E5E7EB; /* light grey input background */
+            --color-text-primary: #1F2937;
+            --color-text-secondary: #6B7280;
+            --color-border: #E5E7EB;
+            --color-black-fill: #000000;
+            /* CTA */
+            --color-cta: #1F1F2F; 
+            --color-cta-hover: #000000;
+            --color-cta-border: #131313;
+            --color-header-icon: #1F2937;
+        }
+
+        /* Apply variables */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--color-text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        /* Typography Styling */
+        h1, h2, h3 { color: var(--color-text-primary); }
+
+        /* General element color application */
+        .bg-body-main { background-color: var(--bg-body); }
+        .bg-card-dark { background-color: var(--bg-card); }
+        .border-dark { border-color: var(--color-border); }
+        .text-primary-dark { color: var(--color-text-primary); }
+        .text-secondary-dark { color: var(--color-text-secondary); }
+        .bg-input-dark { 
+            background-color: var(--bg-input); 
+            border-color: var(--color-border);
+            color: var(--color-text-primary);
+        }
+        .text-error { color: var(--color-error); }
+        .bg-error-light { background-color: rgba(248, 113, 113, 0.1); border-color: var(--color-error); }
+        .text-success { color: var(--color-success); }
+        
+        /* The main color gradient for titles and accents */
+        .text-gradient-red-blue {
+            background-image: linear-gradient(to right, var(--color-runtipi-red), var(--color-runtipi-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-fill-color: transparent;
+        }
+        
+        .text-gradient-red-green {
+            background-image: linear-gradient(to right, var(--color-runtipi-red), var(--color-success));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-fill-color: transparent;
+        }
+
+        /* Feature Block Styles - UNIFIED STYLING */
+        .feature-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--color-border); /* Default border color */
+            transition: all 0.3s ease;
+            cursor: pointer;
+            opacity: 0.6; /* Default state: Dimmed */
+        }
+        
+        /* Hover effect: Applied to ALL steps for the interactive state (Red border, full opacity) */
+        .feature-box:hover {
+            opacity: 1; /* Full brightness on hover */
+            border-color: var(--color-runtipi-red); /* Red/Pink border on hover */
+            box-shadow: 0 0 15px rgba(255, 102, 163, 0.6); /* Stronger shadow/glow */
+            transform: translateY(-2px); /* Slight lift */
+        }
+        
+        /* Icon Colors - Using emojis/icons from the pictures: ✍️, 📏, ⬇️ */
+        .icon-yellow { color: #facc15; } /* Compose File Parsing - Yellow */
+        .icon-blue { color: #6495ED; } /* Runtipi Schema Mapping - Blue */
+        .icon-red { color: #FF66A3; } /* Instant Zip Packaging - Red */
+
+        /* CTA Button - Reusable Class */
+        .btn-cta {
+            background-color: var(--color-cta); 
+            border: 1px solid var(--color-cta-border);
+            color: #FFFFFF; 
+            transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .btn-cta:hover {
+            background-color: var(--color-cta-hover);
+            border-color: var(--color-runtipi-red);
+            transform: scale(1.02);
+        }
+        .btn-cta:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            border-color: var(--color-cta-border);
+        }
+        
+        /* Secondary Button (Load Example) */
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            transition: border-color 0.2s, transform 0.2s, background-color 0.2s;
+        }
+        .btn-secondary:hover {
+            border-color: var(--color-runtipi-blue);
+            background-color: rgba(100, 149, 237, 0.05);
+            transform: scale(1.02);
+        }
+
+        /* Primary Gradient Button (Next Step) */
+        .btn-primary-gradient {
+            background-image: linear-gradient(to right, var(--color-cta), var(--color-cta)); /* Use dark background */
+            border: 1px solid var(--color-cta-border);
+            color: white;
+            transition: opacity 0.2s, transform 0.2s, border-color 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-decoration: none; /* Ensure anchor tag looks like a button */
+        }
+        .btn-primary-gradient:hover {
+            opacity: 1;
+            border-color: var(--color-runtipi-red);
+            transform: translateY(-1px);
+        }
+
+        /* Tooltip Styles (EXACT REUSE) */
+        .icon-btn-gradient {
+            border: 1px solid transparent !important;
+            background-color: var(--bg-card);
+            color: var(--color-text-primary);
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            box-shadow: none !important;
+        }
+        
+        #theme-toggle { position: relative; }
+
+        .icon-btn-gradient:hover {
+            border: 1px solid transparent; 
+            border-image: linear-gradient(to right, var(--color-runtipi-red), var(--color-runtipi-blue)) 1;
+            transform: translateY(-1px);
+        }
+
+        .icon-btn-gradient .tooltip,
+        #theme-toggle .tooltip,
+        #logo-link .tooltip { 
+            visibility: hidden;
+            background-color: var(--color-runtipi-red);
+            color: #fff;
+            text-align: center;
+            border-radius: 0.375rem;
+            padding: 0.375rem 0.625rem; 
+            position: absolute;
+            z-index: 20; 
+            opacity: 0;
+            white-space: nowrap;
+            font-size: 0.75rem; 
+            font-weight: 500;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .icon-btn-gradient .tooltip::after,
+        #theme-toggle .tooltip::after,
+        #logo-link .tooltip::after { 
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--color-runtipi-red) transparent transparent transparent;
+        }
+        
+        .icon-btn-gradient:hover .tooltip,
+        #theme-toggle:hover .tooltip,
+        #logo-link:hover .tooltip { 
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .header-github-btn .tooltip,
+        #theme-toggle .tooltip,
+        #logo-link .tooltip { 
+            bottom: auto; 
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(0.5rem);
+        }
+
+        .header-github-btn:hover .tooltip,
+        #theme-toggle:hover .tooltip,
+        #logo-link:hover .tooltip {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .header-github-btn .tooltip::after,
+        #theme-toggle .tooltip::after,
+        #logo-link .tooltip::after { 
+            top: auto;
+            bottom: 100%;
+            border-color: transparent transparent var(--color-runtipi-red) transparent; 
+        }
+
+        /* Result Panel Styling (for hidden results below the main input) */
+        .result-panel {
+            background-color: var(--bg-input); /* Use input color for data display panels */
+            border: 1px solid var(--color-border); 
+            border-radius: 0.5rem; 
+            padding: 1rem;
+        }
+
+        .suggested-info-panel {
+            background-color: var(--bg-input); 
+            border: 1px solid var(--color-border);
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        /* Custom style for the main input box to replicate the screenshot */
+        .yaml-input-container {
+            background-color: var(--bg-card); /* Use card background for the immediate container */
+            border: 1px solid var(--color-border);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Styles for the Input button to match the dark aesthetic of the screenshot */
+        #parse-btn-input {
+            background-color: var(--color-cta); 
+            border: 1px solid var(--color-cta-border);
+            color: #FFFFFF;
+            transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            text-decoration: none; /* Ensure anchor tag looks like a button */
+        }
+
+        #parse-btn-input:hover {
+            background-color: var(--color-cta-hover);
+            border-color: var(--color-runtipi-red);
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased">
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Navigation Bar (EXACT REUSE) -->
+        <header class="flex justify-between items-center py-6 border-b border-dark">
+            <!-- Logo/Title wrapped in an anchor tag with ID for navigation -->
+            <a href="index.html" id="logo-link" class="text-2xl font-bold flex items-center transition duration-200 hover:opacity-85 cursor-pointer relative">
+                
+                <!-- START SVG Tipi Logo - Replicating Runtipi Style -->
+                <svg width="28" height="28" viewBox="0 0 30 30" fill="none" class="mr-3" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Base Structure (Dark Gray/Reddish base color) -->
+                    <path d="M15 4L27 26H3L15 4Z" fill="#F4511E"/>
+                    <!-- Dark Inner Shadow/Opening - Fill will be set via JS on theme change -->
+                    <path id="tipi-inner-fill" d="M15 7L24 24H6L15 7Z" fill="var(--bg-body)"/> 
+                    <!-- Outer Line (Red) -->
+                    <path d="M15 4L27 26" stroke="#FF66A3" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M3 26L15 4" stroke="#FF66A3" stroke-width="2" stroke-linecap="round"/>
+                    <!-- Horizontal Stripes (Yellowish-Pink) -->
+                    <line x1="10" y1="12" x2="20" y2="12" stroke="#FFD180" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="8" y1="18" x2="22" y2="18" stroke="#FFD180" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="6" y1="24" x2="24" y2="24" stroke="#FFD180" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <!-- END SVG Tipi Logo -->
+                
+                TipiGenerator
+                <!-- Tooltip for the logo link -->
+                <span class="tooltip">Return to Home</span>
+            </a>
+            <!-- Right-aligned Icons and Toggle -->
+            <div class="flex items-center space-x-4">
+                <!-- GitHub Button/Icon Link (Star This Project) -->
+                <a href="https://github.com/acidgreenservers/runtipi-homelab-appstore" target="_blank" 
+                   class="icon-btn-gradient flex items-center text-color-primary font-medium py-2 px-4 rounded-lg header-github-btn" 
+                   data-tooltip="Star This Project">
+                    <i class="fas fa-star text-yellow-400 mr-2"></i>
+                    Star This Project
+                    <i class="fab fa-github ml-2"></i> 
+                    <span class="tooltip">Star This Project</span>
+                </a>
+                
+                <!-- Day/Night Toggle Switch -->
+                <button id="theme-toggle" aria-label="Toggle theme" class="p-2 text-xl rounded-full w-10 h-10 flex items-center justify-center icon-btn-gradient">
+                    <span id="theme-icon">🌙</span>
+                    <span class="tooltip" id="theme-tooltip">Toggle Light/Dark Mode</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area (Containing Title, Boxes, and YAML Input) -->
+        <!-- The max-w-5xl centers the main content block and makes it narrower, as seen in the screenshot -->
+        <div class="py-12 md:py-16 max-w-5xl mx-auto"> 
+            
+            <!-- Main Title (EXACT REUSE from Index) -->
+            <div class="text-center mb-12">
+                <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight mb-4">
+                    <span class="text-gradient-red-blue">Powerful. Simple. Generator.</span>
+                </h1>
+                <p class="text-2xl md:text-3xl font-bold tracking-tight text-gradient-red-blue">
+                    Accelerated. Custom. Apps.
+                </p>
+            </div>
+
+            <!-- Three Feature Boxes - All boxes are now dimmed by default and share the same hover effect -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-16">
+                
+                <!-- Box 1: Compose File Parsing (ACTIVE class removed) -->
+                <div id="step-1" class="feature-box rounded-xl p-6 shadow-md">
+                    <div class="flex items-center mb-3">
+                        <span role="img" aria-label="Compose File Parsing" class="text-3xl mr-4">✍️</span>
+                        <h2 class="text-xl font-bold">Compose File Parsing</h2>
+                    </div>
+                    <p class="text-secondary-dark text-sm">
+                        Automatically analyze your standard Docker Compose YAML to extract necessary configuration variables and settings.
+                    </p>
+                </div>
+
+                <!-- Box 2: Runtipi Schema Mapping -->
+                <div id="step-2" class="feature-box rounded-xl p-6 shadow-md">
+                    <div class="flex items-center mb-3">
+                        <span role="img" aria-label="Runtipi Schema Mapping" class="text-3xl mr-4">📐</span>
+                        <h2 class="text-xl font-bold">Runtipi Schema Mapping</h2>
+                    </div>
+                    <p class="text-secondary-dark text-sm">
+                        Map your application's parameters directly to the Runtipi format, ensuring seamless integration with your custom AppStore.
+                    </p>
+                </div>
+
+                <!-- Box 3: Instant Zip Packaging -->
+                <div id="step-3" class="feature-box rounded-xl p-6 shadow-md">
+                    <div class="flex items-center mb-3">
+                        <span role="img" aria-label="Instant Zip Packaging" class="text-3xl mr-4">⬇️</span>
+                        <h2 class="text-xl font-bold">Instant Zip Packaging</h2>
+                    </div>
+                    <p class="text-secondary-dark text-sm">
+                        Generate a single, complete ZIP file containing all required metadata and configurations, ready for immediate upload.
+                    </p>
+                </div>
+
+            </div>
+            
+            <!-- Step Header (Current Step) -->
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-extrabold tracking-tight">
+                    <span class="text-gradient-red-blue">Step 1: Input YAML</span>
+                </h2>
+            </div>
+
+
+            <!-- YAML INPUT VIEW - Corrected to match the screenshot structure -->
+            <div class="yaml-input-container rounded-xl p-6 shadow-xl">
+                
+                <label for="yaml-input" class="block mb-4 font-semibold text-lg text-primary-dark">Paste Your Docker Compose YAML</label>
+                
+                <textarea 
+                    id="yaml-input" 
+                    rows="15" 
+                    class="w-full bg-input-dark border-none rounded-lg p-4 font-mono text-sm resize-none focus:ring-2 focus:ring-opacity-50 focus:ring-blue-500"
+                    placeholder="Paste your standard docker-compose.yaml here..."
+                ></textarea>
+
+                <div class="flex justify-center mt-6">
+                    <!-- 
+                        ########################################################
+                        # NEXT STEP LINK TARGET: config.html                   #
+                        # ---------------------------------------------------- #
+                        # This element is now an <a> tag styled as a button.   #
+                        # The 'href="#"' is intentional, as the link action (to #
+                        # parse the YAML) is handled by the JavaScript listener. #
+                        # The actual navigation to config.html happens later    #
+                        # in the 'next-btn' handler (see JS below).            #
+                        ########################################################
+                    -->
+                    <a href="#" id="parse-btn-input" class="btn-primary-gradient py-3 px-12 rounded-lg font-semibold flex items-center justify-center">
+                        <i class="fas fa-arrow-right mr-2"></i> Input YAML
+                    </a>
+                    <!-- Load Example button is removed as per screenshot, it was only there for development -->
+                </div>
+
+                <!-- Error Message Panel (Hidden by default) -->
+                <div id="error-msg" class="hidden mt-6 p-4 rounded-lg bg-error-light border" role="alert">
+                    <p class="text-error font-bold">Error:</p>
+                    <p id="error-text" class="text-error"></p>
+                </div>
+
+                <!-- Results Panel (Hidden by default, contains all the results/next button from the previous version) -->
+                <div id="results" class="hidden mt-8">
+                    <h2 class="text-2xl font-bold mb-4 text-success">✓ Successfully Parsed!</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Services -->
+                        <div class="result-panel">
+                            <h3 class="font-bold mb-2 border-b border-dark pb-2">Services:</h3>
+                            <ul id="services-list" class="list-disc pl-5 text-sm text-secondary-dark space-y-1"></ul>
+                        </div>
+
+                        <!-- Ports -->
+                        <div class="result-panel">
+                            <h3 class="font-bold mb-2 border-b border-dark pb-2">Ports:</h3>
+                            <ul id="ports-list" class="list-disc pl-5 text-sm text-secondary-dark space-y-1"></ul>
+                        </div>
+
+                        <!-- Environment Variables -->
+                        <div class="result-panel">
+                            <h3 class="font-bold mb-2 border-b border-dark pb-2">Environment Variables:</h3>
+                            <ul id="env-list" class="list-disc pl-5 text-sm text-secondary-dark space-y-1"></ul>
+                        </div>
+
+                        <!-- Volumes -->
+                        <div class="result-panel">
+                            <h3 class="font-bold mb-2 border-b border-dark pb-2">Volumes:</h3>
+                            <ul id="volumes-list" class="list-disc pl-5 text-sm text-secondary-dark space-y-1"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Suggested Info -->
+                    <div class="suggested-info-panel mt-6">
+                        <h3 class="font-bold mb-2">Suggested App Metadata:</h3>
+                        <p class="text-sm">App ID (runtipi ID): <span id="suggested-id" class="text-success font-mono"></span></p>
+                        <p class="text-sm">App Name: <span id="suggested-name" class="text-success"></span></p>
+                        <p class="text-sm">Default Port: <span id="suggested-port" class="text-success"></span></p>
+                    </div>
+
+                    <button id="next-btn" class="btn-primary-gradient py-3 px-6 rounded-lg font-semibold mt-6">
+                        Continue to Config.json <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- END YAML INPUT VIEW -->
+        </div>
+
+        <!-- Footer (EXACT REUSE - Version tag changed to v1.3.1) -->
+        <footer class="py-10 text-center text-slate-500 text-sm border-t border-dark">
+            <p class="mb-4 text-secondary-dark">
+                Built with <span class="text-red-500">❤️</span> & <span class="text-yellow-500">💪</span> XxZIOIMIBIExX®™ and <span class="text-runtipi-blue">🦾</span> Gemini <span class="text-runtipi-blue">🦾</span> v1.3.1
+            </p>
+            
+            <div class="flex justify-center space-x-4 footer-link-group"> 
+                <!-- 1. Tools Directory -->
+                <a href="https://github.com/acidgreenservers/runtipi-homelab-appstore/tree/master/Tools" target="_blank" 
+                   class="icon-btn-gradient flex items-center text-color-primary font-medium py-2 px-4 rounded-lg"
+                   data-tooltip="View Generator Tools Directory">
+                    <i class="fab fa-github text-lg mr-2"></i>
+                    GitHub
+                    <span class="tooltip">View Generator Tools Directory</span>
+                </a>
+                
+                <!-- 2. My GitHub Profile -->
+                <a href="https://github.com/acidgreenservers" target="_blank" 
+                   class="icon-btn-gradient flex items-center text-color-primary font-medium py-2 px-4 rounded-lg"
+                   data-tooltip="View My GitHub Profile">
+                    <!-- SVG Tipi Logo for profile link -->
+                    <svg width="20" height="20" viewBox="0 0 30 30" fill="none" class="mr-2" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 4L27 26H3L15 4Z" fill="#F4511E"/>
+                        <path d="M15 7L24 24H6L15 7Z" fill="var(--bg-body)"/>
+                        <path d="M15 4L27 26" stroke="#FF66A3" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M3 26L15 4" stroke="#FF66A3" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="10" y1="12" x2="20" y2="12" stroke="#FFD180" stroke-width="1.5" stroke-linecap="round"/>
+                        <line x1="8" y1="18" x2="22" y2="22" stroke="#FFD180" stroke-width="1.5" stroke-linecap="round"/>
+                        <line x1="6" y1="24" x2="24" y2="24" stroke="#FFD180" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    GitHub Profile
+                    <span class="tooltip">View My GitHub Profile</span>
+                </a>
+
+                <!-- 3. Official Store -->
+                <a href="https://github.com/runtipi/runtipi-appstore/tree/master" target="_blank" 
+                   class="icon-btn-gradient flex items-center text-color-primary font-medium py-2 px-4 rounded-lg"
+                   data-tooltip="View Official Store">
+                    <i class="fab fa-github text-lg mr-2"></i>
+                    Official Store
+                    <span class="tooltip">View Official Store</span>
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- Theme Logic (EXACT REUSE) ---
+
+        const htmlElement = document.documentElement;
+
+        /**
+         * Updates the theme icon and the tooltip text based on the current theme.
+         * @param {string} theme - The current theme ('light' or 'dark').
+         */
+        function updateThemeContent(theme) {
+            const themeIcon = document.getElementById('theme-icon');
+            const themeTooltip = document.getElementById('theme-tooltip');
+            if (themeIcon) themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
+            if (themeTooltip) themeTooltip.textContent = theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode';
+        }
+
+        /**
+         * Applies theme-specific visual classes (like logo color updates).
+         * @param {string} theme - The current theme ('light' or 'dark').
+         */
+        function applyThemeVisuals(theme) {
+            // Update the Tipi Logo inner color based on theme
+            const tipiInner = document.getElementById('tipi-inner-fill');
+            if (tipiInner) {
+                 // Get the calculated value of the --bg-body variable in the current theme
+                const computedBg = getComputedStyle(document.body).getPropertyValue('--bg-body').trim();
+                tipiInner.setAttribute('fill', computedBg);
+            }
+        }
+        
+        function toggleTheme() {
+            const oldTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = oldTheme === 'dark' ? 'light' : 'dark';
+            
+            // Update HTML attribute and local storage
+            htmlElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // Update icon, tooltip, and visuals
+            updateThemeContent(newTheme);
+            applyThemeVisuals(newTheme);
+        }
+
+        // --- YAML Parsing Logic ---
+
+        const EXAMPLE_YAML = `version: '3.8'
+services:
+  app:
+    image: nginx:latest
+    container_name: my-app
+    ports:
+      - "8080:80"
+    environment:
+      APP_HOST: localhost
+      APP_PORT: 80
+      TZ: Europe/London
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+  db:
+    image: postgres:latest
+    container_name: my-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password`;
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const yamlInput = document.getElementById('yaml-input');
+            // The parser button is now an anchor tag, but the ID remains the same
+            const parseBtn = document.getElementById('parse-btn-input'); 
+            const nextBtn = document.getElementById('next-btn');
+            const errorMsg = document.getElementById('error-msg');
+            const errorText = document.getElementById('error-text');
+            const resultsDiv = document.getElementById('results');
+            
+            // --- Theme Initialization ---
+            const toggleButton = document.getElementById('theme-toggle');
+            const storedTheme = localStorage.getItem('theme');
+            const initialTheme = storedTheme || 'dark'; // Default to dark if not set
+            
+            htmlElement.setAttribute('data-theme', initialTheme);
+            updateThemeContent(initialTheme);
+            applyThemeVisuals(initialTheme); // Initial visual setup
+            
+            if (toggleButton) toggleButton.addEventListener('click', toggleTheme);
+            
+            // --- YAML Logic ---
+            
+            // The anchor tag now has the click listener to trigger parsing
+            parseBtn.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default link behavior (#)
+                parseYaml();
+            });
+
+            function showError(msg) {
+                errorText.textContent = msg;
+                errorMsg.classList.remove('hidden');
+                resultsDiv.classList.add('hidden');
+                console.error('YAML Error:', msg);
+            }
+            
+            function showSuccess() {
+                errorMsg.classList.add('hidden');
+                resultsDiv.classList.remove('hidden');
+            }
+            
+            /**
+             * Generates a random port number in the high range (10000-65535)
+             * @returns {string} Random port number as a string
+             */
+            function generateRandomPort() {
+                const min = 10000;
+                const max = 65535;
+                return (Math.floor(Math.random() * (max - min + 1)) + min).toString();
+            }
+
+            /**
+             * Converts a raw name (e.g., from image or service key) into a
+             * human-readable, capitalized, and non-hyphenated string.
+             * Example: 'actual-budget' -> 'Actual Budget'
+             * @param {string} rawName 
+             * @returns {string}
+             */
+            function convertToAppName(rawName) {
+                if (!rawName) return 'Unknown App';
+                
+                // 1. Replace non-alphanumeric characters (like hyphens/underscores) with spaces
+                let tempName = rawName.replace(/[^a-zA-Z0-9]/g, ' ');
+                
+                // 2. Capitalize the first letter of every significant word
+                tempName = tempName.split(/\s+/) // Split by one or more spaces
+                    .filter(word => word.length > 0) // Remove empty strings
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ');
+
+                return tempName.trim();
+            }
+            
+            /**
+             * Converts the display App Name (capitalized, spaced) into the 
+             * required runtipi ID format (lowercase, hyphenated).
+             * Example: 'Actual Budget' -> 'actual-budget'
+             * @param {string} appName 
+             * @returns {string}
+             */
+            function convertToAppId(appName) {
+                if (!appName || appName === 'Unknown App') return 'unknown-app';
+                // Convert to lowercase and replace spaces with hyphens
+                return appName.toLowerCase().replace(/\s+/g, '-');
+            }
+
+
+            function parseYaml() {
+                const yamlText = yamlInput.value.trim();
+                
+                if (!yamlText) {
+                    showError('Please paste your docker-compose.yml content.');
+                    return;
+                }
+
+                try {
+                    const parsed = jsyaml.load(yamlText);
+                    console.log('Parsed Compose Data:', parsed);
+                    
+                    if (!parsed || !parsed.services || Object.keys(parsed.services).length === 0) {
+                        showError('Parsed successfully, but no services found in the YAML.');
+                        return;
+                    }
+
+                    showSuccess();
+                    extractInfo(parsed, yamlText);
+                    
+                } catch (e) {
+                    showError('Invalid YAML syntax: ' + e.message);
+                    console.error(e);
+                }
+            }
+
+            function extractInfo(data, yamlText) {
+                const services = Object.keys(data.services || {});
+                
+                const servicesList = document.getElementById('services-list');
+                const portsList = document.getElementById('ports-list');
+                const envList = document.getElementById('env-list');
+                const volumesList = document.getElementById('volumes-list');
+                const suggestedPortSpan = document.getElementById('suggested-port');
+                
+                // Clear previous results
+                servicesList.innerHTML = '';
+                portsList.innerHTML = '';
+                envList.innerHTML = '';
+                volumesList.innerHTML = '';
+                suggestedPortSpan.textContent = ''; // Clear port text
+                suggestedPortSpan.className = ''; // Clear classes
+
+                const allPorts = [];
+                const allEnvVars = [];
+                const allVolumes = [];
+
+                services.forEach(svc => {
+                    const service = data.services[svc];
+                    
+                    // Services List
+                    const liSvc = document.createElement('li');
+                    liSvc.textContent = svc + (service.image ? ` (Image: ${service.image.split('/').pop().split(':')[0]})` : '');
+                    servicesList.appendChild(liSvc);
+
+                    // Ports
+                    if (service.ports) {
+                        service.ports.forEach(port => {
+                            const portStr = String(port).replace(/"/g, '');
+                            // The host (source) port is always the first part before the colon
+                            const hostPort = portStr.includes(':') ? portStr.split(':')[0] : portStr;
+                            allPorts.push(hostPort);
+                            const li = document.createElement('li');
+                            li.textContent = svc + ': ' + port;
+                            portsList.appendChild(li);
+                        });
+                    }
+
+                    // Environment
+                    if (service.environment) {
+                        let envMap = service.environment;
+                        if (Array.isArray(envMap)) {
+                            // Convert array of 'KEY=VALUE' to object for easier handling
+                            envMap = envMap.reduce((acc, current) => {
+                                const parts = current.split('=');
+                                if (parts.length > 1) {
+                                    acc[parts[0]] = parts.slice(1).join('=');
+                                } else {
+                                    acc[parts[0]] = '';
+                                }
+                                return acc;
+                            }, {});
+                        } 
+                        
+                        // Handle object keys
+                        if (typeof envMap === 'object') {
+                            Object.keys(envMap).forEach(key => {
+                                // Default value to empty string if null/undefined
+                                const value = envMap[key] !== null && envMap[key] !== undefined ? envMap[key] : ''; 
+                                const envEntry = `${key}=${value}`;
+
+                                const li = document.createElement('li');
+                                li.textContent = `${svc}: ${envEntry}`;
+                                envList.appendChild(li);
+                                allEnvVars.push(envEntry);
+                            });
+                        }
+                    }
+
+                    // Volumes
+                    if (service.volumes) {
+                        service.volumes.forEach(vol => {
+                            const li = document.createElement('li');
+                            li.textContent = svc + ': ' + vol;
+                            volumesList.appendChild(li);
+                            allVolumes.push(vol);
+                        });
+                    }
+                });
+
+                // --- SUGGESTION LOGIC: Apply new formatting rules ---
+                const firstService = services[0];
+                const firstServiceData = data.services[firstService];
+                
+                // 1. Determine the raw name from image or service key
+                const rawName = firstServiceData.image 
+                    ? firstServiceData.image.split('/').pop().split(':')[0] 
+                    : firstService; 
+                
+                // 2. Format the Name (Capitalized, non-hyphenated)
+                const suggestedName = convertToAppName(rawName);
+                
+                // 3. Format the ID (Lowercase, hyphenated)
+                const suggestedId = convertToAppId(suggestedName);
+                
+                // 4. Determine Default Port (Host Port) - First one, or trigger random assignment
+                const rawDetectedPort = allPorts[0] || ''; 
+                let suggestedPortToSave;
+                
+                document.getElementById('suggested-id').textContent = suggestedId;
+                document.getElementById('suggested-name').textContent = suggestedName;
+                
+                // Function to check if a string is a valid numeric port (not a variable or empty)
+                const isValidPortNumber = (port) => {
+                    // Check if it's not empty, contains only digits, and is a positive number
+                    return port && /^\d+$/.test(port) && parseInt(port) > 0;
+                };
+
+                if (!isValidPortNumber(rawDetectedPort)) {
+                    // Port not detected or is a variable: Assign random port, display error status
+                    suggestedPortToSave = generateRandomPort();
+                    
+                    suggestedPortSpan.className = 'text-error font-semibold font-mono'; // Red text with fixed font for number
+                    suggestedPortSpan.textContent = `No Port Detected (Assigning Random: ${suggestedPortToSave})`;
+                    
+                } else {
+                    // Port detected: Use detected port, display success status
+                    suggestedPortToSave = rawDetectedPort;
+                    
+                    suggestedPortSpan.className = 'text-success font-mono';
+                    suggestedPortSpan.textContent = suggestedPortToSave;
+                }
+
+                // Save ALL data to localStorage for the next page (config.html)
+                localStorage.setItem('parsedCompose', JSON.stringify({
+                    yaml: yamlText,
+                    data: data, // The full parsed object
+                    // Filter down to unique and relevant data for the next step
+                    envVars: allEnvVars.filter((v, i, a) => a.indexOf(v) === i),
+                    ports: allPorts.filter((p, i, a) => a.indexOf(p) === i),
+                    volumes: allVolumes.filter((v, i, a) => a.indexOf(v) === i),
+                    suggestions: {
+                        id: suggestedId,
+                        name: suggestedName,
+                        port: suggestedPortToSave // Use the assigned (detected or random) port
+                    }
+                }));
+            }
+
+            // Next button - goes to config.html
+            nextBtn.addEventListener('click', function() {
+                // Ensure a successful parse has happened before proceeding
+                if (resultsDiv.classList.contains('hidden')) {
+                    parseYaml(); // Try parsing one last time
+                    if (resultsDiv.classList.contains('hidden')) {
+                        showError('Please successfully parse a docker-compose.yml file before continuing.');
+                        return;
+                    }
+                }
+                // We're good to go!
+                // ####################################################################
+                // # THIS IS WHERE THE NAVIGATION TO THE NEXT STEP OCCURS: config.html #
+                // ####################################################################
+                window.location.href = 'config.html';
+            });
+        });
+    </script>
+</body>
+</html>
